@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="MemeDex">
+  <defs>
+    <linearGradient id="md-bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff7cc0"/>
+      <stop offset=".55" stop-color="#ff2e8a"/>
+      <stop offset="1" stop-color="#a3125f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#md-bg)"/>
+  <rect x="0" y="0" width="64" height="4" fill="#fff" fill-opacity=".35"/>
+  <!-- open eye and winking eye -->
+  <rect x="16" y="19" width="9" height="9" fill="#fff"/>
+  <rect x="38" y="23" width="11" height="4" fill="#fff"/>
+  <!-- smile drawn as a rising price line -->
+  <path d="M13 40l8 5 7-6 7 5 10-10" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M38 34h7v7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>
