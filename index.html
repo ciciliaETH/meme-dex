@@ -143,6 +143,12 @@ button, input { font: inherit; color: inherit; }
 .icon-btn { flex: none; width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--panel) 80%, transparent); cursor: pointer; display: grid; place-items: center; color: var(--muted); }
 .icon-btn:hover { color: var(--fg); }
 .icon-btn svg { width: 18px; height: 18px; }
+.icon-btn .fx-ico { font: 18px/1 "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; transition: opacity .2s, filter .2s; }
+.icon-btn[aria-pressed="false"] .fx-ico { filter: grayscale(1); opacity: .45; }
+/* animal emoji layer: never catches clicks, sits above everything */
+#fx { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 9999; contain: strict; }
+html.fx-on :is(a, img) { -webkit-touch-callout: none; }
+.fx-e { position: absolute; left: 0; top: 0; font: 28px/1 "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; user-select: none; will-change: transform, opacity; }
 .results {
   position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 30;
   background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r);
@@ -546,6 +552,7 @@ footer { display: none; }
           <div id="results" class="results" role="listbox" hidden></div>
         </div>
         <div class="top-right">
+          <button id="fx-toggle" class="icon-btn" type="button" aria-pressed="true" aria-label="Animal cursor and tap effects" title="Animal effects on/off"><span class="fx-ico" aria-hidden="true">🐾</span></button>
           <button id="theme" class="icon-btn" type="button" aria-label="Toggle light/dark theme">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.8v2M10 16.2v2M1.8 10h2M16.2 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>
           </button>
@@ -649,6 +656,15 @@ const CFG = {
   tradesMs: 45000,    // refresh trades on the token page
   chartMs: 90000,     // ambil ulang candle
   chainIcons: "https://dd.dexscreener.com/ds-data/chains/{chain}.png",  // chain logos; a plain colour square shows if one fails
+  // fun mode: animal emoji cursor, a burst on every click/tap, a stream while pressing and holding
+  fx: {
+    animals: ["🐸", "🐶", "🐱", "🐵", "🦊", "🐼", "🐨", "🐯", "🦁", "🐷", "🐰", "🐹", "🐻", "🐧", "🐤", "🦄", "🐳", "🐙", "🦖", "🐢", "🐕", "🐈", "🐒", "🦍", "🦈", "🐝", "🦉", "🐊"],
+    cursor: "🐸",       // normal cursor
+    cursorHover: "🐶",  // over links, buttons and rows
+    burst: 8,           // emojis per click/tap
+    holdEveryMs: 70,    // one more emoji this often while held down
+    maxOnScreen: 90,
+  },
   listEnrich: 60,     // how many top rows get graded and copy-checked
   // Blockchain nodes for the real-time on-chain feed on token pages (free, no key).
   // If you have your own RPC (Helius, QuickNode, Alchemy, etc.), put its URL here.
@@ -2324,6 +2340,99 @@ $("#theme").addEventListener("click", () => {
   document.documentElement.dataset.theme = next; store.set("lt.theme", next);
   applyChartTheme();
 });
+
+/* fun mode: animal emoji cursor + bursts on click/tap + stream on press-and-hold */
+(() => {
+  const root = document.documentElement;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  const layer = document.createElement("div"); layer.id = "fx"; layer.setAttribute("aria-hidden", "true");
+  document.body.appendChild(layer);
+  const style = document.createElement("style"); document.head.appendChild(style);
+  const pick = () => CFG.fx.animals[Math.floor(Math.random() * CFG.fx.animals.length)];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  // cursor: draw the emoji on a canvas (works in every browser, unlike emoji-in-SVG cursors)
+  function emojiPng(e, px) {
+    const c = document.createElement("canvas"); c.width = c.height = px;
+    const g = c.getContext("2d");
+    g.font = `${Math.round(px * .78)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(e, px / 2, px / 2 + px * .04);
+    return c.toDataURL("image/png");
+  }
+  function cursorRule(sel, e, fallback) {
+    const a = emojiPng(e, 32), b = emojiPng(e, 64);
+    return `${sel}{cursor:url(${a}) 16 16,${fallback};cursor:-webkit-image-set(url(${a}) 1x,url(${b}) 2x) 16 16,${fallback};cursor:image-set(url(${a}) 1x,url(${b}) 2x) 16 16,${fallback}}`;
+  }
+  let cursorCSS = "";
+  function paintCursor(on) {
+    if (on && !cursorCSS) {
+      try {
+        cursorCSS = cursorRule("html.fx-on,html.fx-on body", CFG.fx.cursor, "auto")
+          + cursorRule("html.fx-on :is(a,button,[role=button],label,summary,select,.market tbody tr,.pill,.tab)", CFG.fx.cursorHover, "pointer")
+          + "html.fx-on :is(input,textarea){cursor:text}";
+      } catch { cursorCSS = ""; }
+    }
+    style.textContent = on ? cursorCSS : "";
+  }
+
+  function spawn(x, y, frames, duration) {
+    if (layer.childElementCount >= CFG.fx.maxOnScreen) return;
+    const el = document.createElement("span"); el.className = "fx-e"; el.textContent = pick();
+    layer.appendChild(el);
+    const a = el.animate(frames, { duration, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" });
+    a.onfinish = a.oncancel = () => el.remove();
+  }
+  const at = (x, y, s, r) => `translate(${x}px,${y}px) translate(-50%,-50%) scale(${s}) rotate(${r}deg)`;
+  // a click/tap: animals pop out in a fan, then drop and fade
+  function burst(x, y) {
+    for (let i = 0; i < CFG.fx.burst; i++) {
+      const ang = rnd(-165, -15) * Math.PI / 180, dist = rnd(55, 125), s = rnd(.8, 1.35), r = rnd(-40, 40);
+      const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+      spawn(x, y, [
+        { transform: at(x, y, .3, 0), opacity: 1 },
+        { transform: at(x + dx, y + dy, s, r), opacity: 1, offset: .5 },
+        { transform: at(x + dx * 1.25, y + dy + rnd(60, 110), s * .85, r * 1.6), opacity: 0 },
+      ], rnd(900, 1300));
+    }
+  }
+  // holding down: animals keep floating up from the finger/cursor
+  function rise(x, y) {
+    const jx = rnd(-14, 14), drift = rnd(-40, 40), s = rnd(.7, 1.2), r = rnd(-25, 25);
+    spawn(x, y, [
+      { transform: at(x + jx, y, .4, 0), opacity: 0 },
+      { transform: at(x + jx + drift * .3, y - 30, s, r * .4), opacity: 1, offset: .15 },
+      { transform: at(x + jx + drift, y - rnd(140, 220), s * 1.15, r), opacity: 0 },
+    ], rnd(1200, 1800));
+  }
+
+  let on = store.get("lt.fx", true) !== false, holdT = 0, pos = null;
+  const stopHold = () => { clearInterval(holdT); holdT = 0; pos = null; };
+  function setOn(v) {
+    on = v; store.set("lt.fx", v);
+    root.classList.toggle("fx-on", v);
+    $("#fx-toggle").setAttribute("aria-pressed", String(v));
+    paintCursor(v);
+    if (!v) { stopHold(); layer.replaceChildren(); }
+  }
+  addEventListener("pointerdown", e => {
+    if (!on || reduce.matches || (e.pointerType === "mouse" && e.button !== 0)) return;
+    if (e.target.closest?.("input,textarea,select")) return;
+    burst(e.clientX, e.clientY);
+    stopHold(); pos = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    const started = Date.now();
+    holdT = setInterval(() => { if (pos && Date.now() - started > 220) rise(pos.x, pos.y); }, CFG.fx.holdEveryMs);
+  }, { passive: true });
+  addEventListener("pointermove", e => { if (pos && e.pointerId === pos.id) { pos.x = e.clientX; pos.y = e.clientY; } }, { passive: true });
+  for (const ev of ["pointerup", "pointercancel", "blur"]) addEventListener(ev, stopHold, { passive: true });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stopHold(); });
+  // phones: a long press would open the link/image menu and end the stream, so skip that menu while fun mode is on
+  let lastType = "mouse";
+  addEventListener("pointerdown", e => { lastType = e.pointerType; }, { capture: true, passive: true });
+  addEventListener("contextmenu", e => { if (on && lastType === "touch" && !e.target.closest?.("input,textarea")) e.preventDefault(); });
+  $("#fx-toggle").addEventListener("click", () => setOn(!on));
+  setOn(on);
+})();
 
 /* router */
 function route() {

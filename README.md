@@ -13,6 +13,7 @@ Live meme coin screener in a single static page: prices, charts, on-chain trades
 - Moving trending ticker, chain filter with chain logos, quick filters (liquidity, no copies, grade A–C)
 - Token page with candlestick chart, live trades read straight from the chain, stats and a security panel
 - Updates on its own: prices every 15 seconds, swaps as they happen on supported pools
+- Fun mode: animal emoji cursor, a burst of animals on every click or tap, and a stream while you press and hold. The 🐾 button in the header turns it off (saved per visitor).
 
 ## Coin Grade
 
