@@ -74,7 +74,7 @@ body {
 img { max-width: 100%; }
 [hidden] { display: none !important; }
 a { color: inherit; }
-button, input { font: inherit; color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .num, .mono { font-variant-numeric: tabular-nums; }
 .up { color: var(--up); }
@@ -346,6 +346,7 @@ table { width: 100%; border-collapse: collapse; }
   .col { display: contents; }
   #chart-card { order: 1; } #grade-card { order: 2; } #orig-card { order: 3; }
   #stats-card { order: 4; } #trades-card { order: 5; } #sec-card { order: 6; }
+  #info-card { order: 2; } #cta-card { order: 7; }
 }
 .card { min-width: 0; }
 .card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; flex-wrap: wrap; }
@@ -446,6 +447,117 @@ details.crit summary { cursor: pointer; color: var(--muted); font-size: 12px; fo
 .checks .vv { font-size: 12px; color: var(--muted); }
 #sec-card .stats { padding: 14px 0 0; }
 
+/* ---------- token info (paid profile) on the token page ---------- */
+.d-banner { width: 100%; aspect-ratio: 3 / 1; max-height: 260px; overflow: hidden; background: var(--panel-3); border: 1px solid var(--line); border-bottom: 0; }
+.d-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.d-banner:not([hidden]) + .d-head { border-top-color: transparent; }
+.info-desc { margin: 0; font-size: 13px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; color: color-mix(in srgb, var(--fg) 88%, transparent); font-weight: 500; }
+.soc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.soc a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border: 1px solid var(--line-2); background: var(--panel-2); text-decoration: none; font-weight: 700; font-size: 12.5px; color: var(--fg); min-width: 0; }
+.soc a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.soc a:hover { border-color: var(--accent); color: var(--accent); }
+.info-meta { margin-top: 12px !important; }
+.cta-in { display: grid; gap: 10px; padding: 16px; }
+.cta-in h2 { font: 700 14px var(--font-display); margin: 0; }
+.cta-in p { margin: 0; color: var(--muted); font-size: 12.5px; font-weight: 500; }
+.btn-a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; font: 800 13px var(--font-body); color: #fff; text-decoration: none; cursor: pointer;
+  border: 1px solid rgba(255, 150, 200, .55); background: linear-gradient(180deg, var(--btn-hi) 0%, var(--btn-mid) 55%, var(--btn-lo) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 8px 22px rgba(255, 46, 138, .32); }
+.btn-a:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+.btn-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 14px; font: 700 13px var(--font-body); color: var(--fg); text-decoration: none; cursor: pointer; border: 1px solid var(--line-2); background: var(--panel-2); flex: none; }
+.btn-b:hover { border-color: var(--accent); color: var(--accent); }
+.btn-b:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------- update token info page ---------- */
+.up-title { font: 700 26px/1.1 var(--font-display); margin: 0 0 6px; letter-spacing: -.01em; }
+.up-lead { color: var(--muted); margin: 0 0 18px; max-width: 72ch; font-weight: 500; }
+.up-lead b { color: var(--fg); }
+.up-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; align-items: start; }
+@media (max-width: 1100px) { .up-grid { grid-template-columns: minmax(0, 1fr); } }
+.up-main { display: grid; gap: 12px; min-width: 0; }
+.up-step { margin: 0; padding: 0; min-width: 0; }
+.up-step > legend { float: left; width: 100%; padding: 14px 16px 0; font: 700 14px var(--font-display); display: flex; align-items: center; gap: 10px; }
+.up-step > legend .n { width: 22px; height: 22px; display: grid; place-items: center; flex: none; font: 800 11px var(--font-body); color: #fff; background: linear-gradient(180deg, var(--btn-hi), var(--btn-mid) 60%, var(--btn-lo)); }
+.up-body { clear: both; padding: 12px 16px 16px; display: grid; gap: 14px; }
+.fld { display: grid; gap: 6px; min-width: 0; }
+.fld > label, .fld > .lbl { font-size: 12px; font-weight: 700; color: var(--muted); }
+.fld .opt { color: var(--dim); font-weight: 600; }
+.inp { width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--fg); outline: none; font-weight: 600; min-width: 0; }
+textarea.inp { height: auto; min-height: 104px; padding: 10px 12px; resize: vertical; line-height: 1.5; font-weight: 500; }
+.inp::placeholder { color: var(--dim); font-weight: 500; }
+.inp:focus { border-color: color-mix(in srgb, var(--accent) 60%, transparent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.inp[aria-invalid="true"] { border-color: var(--down); }
+.hint { font-size: 11.5px; color: var(--dim); font-weight: 600; margin: 0; }
+.ferr { font-size: 12px; color: var(--down); font-weight: 700; margin: 0; }
+.ferr:empty { display: none; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row-l { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px; }
+@media (max-width: 720px) { .row2 { grid-template-columns: 1fr; } .row-l { grid-template-columns: 110px minmax(0, 1fr); } }
+.inline { display: flex; gap: 8px; min-width: 0; }
+.inline .inp { flex: 1; }
+.tok-found { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: var(--panel-2); min-width: 0; }
+.tok-found .t { min-width: 0; display: grid; gap: 2px; }
+.tok-found .t b { font-weight: 800; }
+.tok-found .t span { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tok-found .v { margin-left: auto; text-align: right; font-size: 12px; font-weight: 700; flex: none; }
+.drops { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 12px; }
+@media (max-width: 720px) { .drops { grid-template-columns: 1fr; } }
+.drop { position: relative; display: grid; place-items: center; align-content: center; gap: 6px; min-height: 150px; padding: 12px; text-align: center; cursor: pointer; border: 1px dashed var(--line-2); background: var(--panel-2); color: var(--muted); font-size: 12px; font-weight: 600; }
+.drop:hover, .drop.over { border-color: var(--accent); color: var(--fg); }
+.drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.drop b { color: var(--fg); font-size: 12.5px; }
+.drop img { display: block; pointer-events: none; }
+.drop.icon img { width: 96px; height: 96px; object-fit: cover; }
+.drop.banner img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; }
+.drop .rm { position: absolute; top: 6px; right: 6px; z-index: 2; height: 26px; padding: 0 8px; font-size: 11px; }
+.paym { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 560px) { .paym { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.paym button { display: flex; align-items: center; gap: 9px; height: 46px; padding: 0 10px; border: 1px solid var(--line-2); background: var(--panel-2); cursor: pointer; text-align: left; color: var(--muted); font-weight: 800; font-size: 13px; min-width: 0; }
+.paym button small { display: block; font-size: 10.5px; color: var(--dim); font-weight: 700; }
+.paym button:hover { color: var(--fg); }
+.paym button[aria-pressed="true"] { color: var(--fg); border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: var(--accent-soft); box-shadow: 0 0 18px var(--accent-soft); }
+.pay-box { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); background: var(--panel-2); }
+.pay-line { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.pay-line > span { color: var(--dim); font-size: 11.5px; font-weight: 700; }
+.pay-line b { font: 700 17px var(--font-display); overflow-wrap: anywhere; }
+.pay-line code { font: 600 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.vres { font-size: 12.5px; font-weight: 700; padding: 9px 11px; border: 1px solid var(--line); margin: 0; }
+.vres:empty { display: none; }
+.vres.ok { color: var(--up); background: var(--up-soft); border-color: color-mix(in srgb, var(--up) 40%, transparent); }
+.vres.fail { color: var(--down); background: var(--down-soft); border-color: color-mix(in srgb, var(--down) 40%, transparent); }
+.vres.unknown, .vres.wait { color: var(--warn); background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+.chk { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; font-weight: 600; cursor: pointer; }
+.chk input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.up-submit { display: grid; gap: 10px; padding: 16px; }
+.up-submit .inline { align-items: center; flex-wrap: wrap; }
+.up-miss { font-size: 12px; color: var(--muted); font-weight: 600; margin: 0; }
+.up-side { position: sticky; top: 84px; display: grid; gap: 12px; min-width: 0; }
+@media (max-width: 1100px) { .up-side { position: static; } }
+.pv-banner { aspect-ratio: 3 / 1; overflow: hidden; display: grid; place-items: center; color: var(--dim); font-size: 11.5px; font-weight: 700;
+  background: repeating-linear-gradient(135deg, var(--panel-2) 0 10px, var(--panel-3) 10px 20px); border-bottom: 1px solid var(--line); }
+.pv-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pv-id { display: flex; gap: 12px; align-items: flex-end; padding: 0 16px; margin-top: -28px; position: relative; }
+.pv-id .logo, .pv-id .pv-ph { width: 60px; height: 60px; border: 3px solid var(--panel); flex: none; }
+.pv-ph { display: grid; place-items: center; background: var(--panel-3); color: var(--dim); font: 800 18px var(--font-display); }
+.pv-id b { font: 700 16px var(--font-display); display: block; }
+.pv-id span { color: var(--muted); font-size: 12px; }
+.pv-body { padding: 12px 16px 16px; display: grid; gap: 10px; }
+.pv-body .info-desc { max-height: 9.6em; overflow: hidden; }
+.perks { list-style: none; margin: 0; padding: 0 16px 16px; display: grid; gap: 8px; }
+.perks li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.perks li::before { content: "✓"; color: var(--up); font-weight: 800; }
+.up-off { padding: 28px 20px; text-align: center; color: var(--muted); }
+.up-off b { display: block; color: var(--fg); font: 700 16px var(--font-display); margin-bottom: 6px; }
+.up-done { padding: 28px 22px; display: grid; gap: 12px; justify-items: start; max-width: 680px; }
+.up-done .okmark { width: 44px; height: 44px; display: grid; place-items: center; font: 800 22px var(--font-display); color: var(--up); background: var(--up-soft); border: 1px solid color-mix(in srgb, var(--up) 40%, transparent); }
+.up-done h2 { font: 700 20px var(--font-display); margin: 0; }
+.up-done p { margin: 0; color: var(--muted); font-weight: 500; }
+.up-done p b { color: var(--fg); }
+.side-cta { margin: 14px 0 0; }
+.nav .tab .tag { margin-left: auto; font-size: 10.5px; font-weight: 800; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); padding: 1px 6px; }
+.nav .tab[aria-current="page"] .tag { color: #fff; border-color: rgba(255, 255, 255, .6); }
+
 /* phones: nav rail becomes a bottom tab bar */
 .bottom-nav { display: none; }
 @media (max-width: 860px) {
@@ -456,7 +568,7 @@ details.crit summary { cursor: pointer; color: var(--muted); font-size: 12px; fo
   .shell { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
   .bottom-nav {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; position: fixed; z-index: 25;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; position: fixed; z-index: 25;
     left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
     bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     padding: 6px; border-radius: 18px; border: 1px solid var(--line-2);
@@ -493,6 +605,7 @@ footer { display: none; }
     <symbol id="i-market" viewBox="0 0 24 24"><path d="M4 19V9m5.3 10V5m5.4 14v-7M20 19v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
     <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 3c1 3.5 5 5.4 5 10a5 5 0 0 1-10 0c0-2 1-3.6 2.3-4.7.2 1.6 1 2.7 2.2 3.2C11 9 11.4 5.6 12 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Zm9-13 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/></symbol>
     <symbol id="i-new" viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   </defs>
 </svg>
@@ -519,6 +632,7 @@ footer { display: none; }
       <a class="tab" data-tab="trending" href="#/trending"><svg aria-hidden="true"><use href="#i-fire"/></svg>Trending <span class="cnt" id="cnt-trending"></span></a>
       <a class="tab" data-tab="fresh" href="#/new"><svg aria-hidden="true"><use href="#i-new"/></svg>New Listings <span class="cnt" id="cnt-fresh"></span></a>
       <a class="tab" data-tab="watch" href="#/watchlist"><svg aria-hidden="true"><use href="#i-star"/></svg>Watchlist <span class="cnt" id="cnt-watch"></span></a>
+      <a class="tab side-cta" data-tab="update" href="#/update"><svg aria-hidden="true"><use href="#i-edit"/></svg>Update Token Info</a>
     </nav>
     <div class="side-foot">
       <span>Grades and original/copy checks are automated.</span>
@@ -598,6 +712,7 @@ footer { display: none; }
 
       <section id="detail-view" hidden>
         <a class="back" href="#/">← Back to market</a>
+        <div id="d-banner" class="d-banner" hidden></div>
         <div id="d-head" class="panel d-head"></div>
         <div id="d-alert" hidden></div>
         <div class="desk">
@@ -623,12 +738,131 @@ footer { display: none; }
             </div>
           </div>
           <div class="col col-side">
+            <div class="panel card" id="info-card" hidden></div>
             <div class="panel card" id="grade-card"></div>
             <div class="panel card" id="orig-card"></div>
             <div class="panel card" id="stats-card"></div>
             <div class="panel card" id="sec-card"></div>
+            <div class="panel card" id="cta-card" hidden></div>
           </div>
         </div>
+      </section>
+
+      <section id="update-view" hidden>
+        <a class="back" href="#/">← Back to market</a>
+        <h1 class="up-title">Update token info</h1>
+        <p class="up-lead">Show your token's logo, banner, description and official links on MemeDex. One-time fee of <b class="up-fee">$99</b>, checked by the MemeDex team before it goes live.</p>
+        <div id="up-off" class="panel up-off" hidden><b>Token info updates are opening soon</b>Check back in a little while.</div>
+        <div id="up-done" class="panel up-done" hidden></div>
+        <form id="up-form" class="up-grid" novalidate>
+          <div class="up-main">
+            <fieldset class="panel up-step">
+              <legend><span class="n">1</span>Token</legend>
+              <div class="up-body">
+                <div class="fld"><span class="lbl">Chain</span><div class="pills" id="up-chains" role="group" aria-label="Token chain"></div></div>
+                <div class="fld">
+                  <label for="up-addr">Contract address</label>
+                  <div class="inline"><input class="inp" id="up-addr" autocomplete="off" spellcheck="false" placeholder="Paste the token contract address"><button class="btn-b" type="button" id="up-find">Find token</button></div>
+                  <p class="ferr" id="up-addr-err"></p>
+                </div>
+                <div id="up-tok"></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="panel up-step">
+              <legend><span class="n">2</span>Token info</legend>
+              <div class="up-body">
+                <div class="fld">
+                  <label for="up-desc">Description <span class="opt">(optional)</span></label>
+                  <textarea class="inp" id="up-desc" maxlength="1000" placeholder="What is the token about? Keep it short and factual."></textarea>
+                  <p class="hint"><span id="up-desc-n">0</span>/1000</p>
+                </div>
+                <div class="row2">
+                  <div class="fld"><label for="up-web">Website</label><input class="inp" id="up-web" data-link="website" inputmode="url" placeholder="https://yourtoken.com"><p class="ferr" data-err="website"></p></div>
+                  <div class="fld"><label for="up-x">X (Twitter)</label><input class="inp" id="up-x" data-link="twitter" placeholder="@handle or x.com link"><p class="ferr" data-err="twitter"></p></div>
+                  <div class="fld"><label for="up-tg">Telegram</label><input class="inp" id="up-tg" data-link="telegram" placeholder="t.me/yourgroup"><p class="ferr" data-err="telegram"></p></div>
+                  <div class="fld"><label for="up-dc">Discord <span class="opt">(optional)</span></label><input class="inp" id="up-dc" data-link="discord" placeholder="discord.gg/invite"><p class="ferr" data-err="discord"></p></div>
+                </div>
+                <div class="fld">
+                  <span class="lbl">Other links <span class="opt">(optional, up to 2)</span></span>
+                  <div class="row-l"><input class="inp" id="up-l1-label" maxlength="24" placeholder="Label" aria-label="Link 1 label"><input class="inp" id="up-l1-url" inputmode="url" placeholder="https://" aria-label="Link 1 URL"></div>
+                  <div class="row-l"><input class="inp" id="up-l2-label" maxlength="24" placeholder="Label" aria-label="Link 2 label"><input class="inp" id="up-l2-url" inputmode="url" placeholder="https://" aria-label="Link 2 URL"></div>
+                  <p class="ferr" data-err="links"></p>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="panel up-step">
+              <legend><span class="n">3</span>Logo and banner</legend>
+              <div class="up-body">
+                <div class="drops">
+                  <div class="fld">
+                    <span class="lbl">Logo <span class="opt">(square)</span></span>
+                    <label class="drop icon" id="up-icon-drop"><input type="file" id="up-icon" accept="image/png,image/jpeg,image/webp,image/gif"><span class="drop-in"><b>Upload logo</b><br>PNG, JPG, WEBP or GIF<br>min 128×128, max 1 MB</span></label>
+                    <p class="ferr" data-err="icon"></p>
+                  </div>
+                  <div class="fld">
+                    <span class="lbl">Banner <span class="opt">(3:1, like 1500×500)</span></span>
+                    <label class="drop banner" id="up-banner-drop"><input type="file" id="up-banner" accept="image/png,image/jpeg,image/webp,image/gif"><span class="drop-in"><b>Upload banner</b><br>PNG, JPG, WEBP or GIF<br>min 900 px wide, max 3 MB</span></label>
+                    <p class="ferr" data-err="banner"></p>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="panel up-step">
+              <legend><span class="n">4</span>Payment</legend>
+              <div class="up-body">
+                <div class="fld"><span class="lbl">Pay with</span><div class="paym" id="up-pay" role="group" aria-label="Payment method"></div></div>
+                <div class="pay-box">
+                  <div class="pay-line"><span>Send</span><b id="up-amt">…</b><button class="copy" type="button" id="up-amt-copy" data-copy="">Copy</button></div>
+                  <div class="pay-line"><span>To</span><code id="up-wallet">…</code><button class="copy" type="button" id="up-wallet-copy" data-copy="">Copy</button></div>
+                  <p class="hint" id="up-pay-hint"></p>
+                </div>
+                <div class="fld">
+                  <label for="up-tx">Transaction hash</label>
+                  <div class="inline"><input class="inp" id="up-tx" autocomplete="off" spellcheck="false" placeholder="Paste the transaction hash or signature after paying"><button class="btn-b" type="button" id="up-verify">Check payment</button></div>
+                  <p class="vres" id="up-vres" role="status"></p>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="panel up-step">
+              <legend><span class="n">5</span>Contact</legend>
+              <div class="up-body">
+                <div class="fld">
+                  <label for="up-contact">Telegram or email</label>
+                  <input class="inp" id="up-contact" maxlength="200" autocomplete="email" placeholder="@yourname or you@email.com">
+                  <p class="hint">Only the MemeDex team sees this. We use it if something about the request needs fixing.</p>
+                </div>
+                <label class="chk"><input type="checkbox" id="up-owner"><span>I'm the owner or an authorized member of this token's team, and the links above are official.</span></label>
+              </div>
+            </fieldset>
+
+            <div class="panel up-submit">
+              <div class="inline"><button class="btn-a" type="submit" id="up-send" disabled>Submit for review</button><span class="note" id="up-status" role="status"></span></div>
+              <p class="up-miss" id="up-miss"></p>
+            </div>
+          </div>
+
+          <aside class="up-side" aria-label="Preview">
+            <div class="panel card">
+              <div class="card-top"><h2>Preview</h2><span class="note">how it will look</span></div>
+              <div class="pv-banner" id="pv-banner">Banner 1500 × 500</div>
+              <div class="pv-id"><span class="pv-ph" id="pv-logo">?</span><div style="min-width:0"><b id="pv-sym">Your token</b><span id="pv-name">Name · chain</span></div></div>
+              <div class="pv-body"><p class="info-desc" id="pv-desc"></p><div class="soc" id="pv-links"></div></div>
+            </div>
+            <div class="panel card">
+              <div class="card-top"><h2>What you get</h2><span class="note up-fee">$99</span></div>
+              <ul class="perks">
+                <li>Your logo across MemeDex: market, search and the token page</li>
+                <li>A banner at the top of your token page</li>
+                <li>Description and official links in a Token info panel</li>
+                <li>Every request is checked by a person before it goes live</li>
+              </ul>
+            </div>
+          </aside>
+        </form>
       </section>
     </main>
   </div>
@@ -639,6 +873,7 @@ footer { display: none; }
   <a class="tab" data-tab="trending" href="#/trending"><svg aria-hidden="true"><use href="#i-fire"/></svg>Trending</a>
   <a class="tab" data-tab="fresh" href="#/new"><svg aria-hidden="true"><use href="#i-new"/></svg>New</a>
   <a class="tab" data-tab="watch" href="#/watchlist"><svg aria-hidden="true"><use href="#i-star"/></svg>Watchlist</a>
+  <a class="tab" data-tab="update" href="#/update"><svg aria-hidden="true"><use href="#i-edit"/></svg>Token info</a>
 </nav>
 
 <script>
@@ -665,6 +900,15 @@ const CFG = {
     holdEveryMs: 70,    // one more emoji this often while held down
     maxOnScreen: 90,
   },
+  // Paid "Update token info": fill in the Supabase project and your wallets to switch it on.
+  supabase: { url: "", anonKey: "" },
+  pay: {
+    usd: 99,                       // fee in US dollars
+    minRatio: 0.97,                // accept payments worth at least 97% of the fee (prices move)
+    wallets: { solana: "", evm: "" }, // evm wallet receives ETH and USDC on Base and Ethereum
+    support: "",                   // optional link shown after submitting, e.g. https://t.me/yourchannel
+  },
+  profilesMs: 300000,  // reload approved token info every 5 minutes
   listEnrich: 60,     // how many top rows get graded and copy-checked
   // Blockchain nodes for the real-time on-chain feed on token pages (free, no key).
   // If you have your own RPC (Helius, QuickNode, Alchemy, etc.), put its URL here.
@@ -1259,11 +1503,35 @@ function sortedRows(filtered = true) {
   return items.slice(0, 100).map(x => x.r);
 }
 
+/* ---------- token info bought by token teams (stored in Supabase) ---------- */
+const SB = () => CFG.supabase.url && CFG.supabase.anonKey ? { url: CFG.supabase.url.replace(/\/+$/, ""), key: CFG.supabase.anonKey } : null;
+const sbHeaders = (extra = {}) => { const s = SB(); return { apikey: s.key, Authorization: "Bearer " + s.key, ...extra }; };
+const profiles = new Map();
+const profileOf = r => r?.base?.address ? profiles.get(tokKey(r.chain, r.base.address)) || null : null;
+async function loadProfiles() {
+  const s = SB(); if (!s) return;
+  const next = new Map();
+  try {
+    for (let from = 0; from < 20000; from += 1000) {
+      const res = await fetch(`${s.url}/rest/v1/token_profiles?select=chain,address,symbol,name,description,website,twitter,telegram,discord,links,icon_url,banner_url,updated_at&order=updated_at.desc`,
+        { headers: sbHeaders({ Range: `${from}-${from + 999}`, "Range-Unit": "items" }), signal: AbortSignal.timeout(15000) });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const list = await res.json();
+      for (const p of list) next.set(tokKey(p.chain, p.address), p);
+      if (list.length < 1000) break;
+    }
+  } catch { return; } // keep the last good copy
+  profiles.clear(); for (const [k, v] of next) profiles.set(k, v);
+  if (state.view === "list") renderList();
+  else if (state.view === "detail") { const r = rows.get(state.detailKey); if (r) { paintHead(r); paintStats(r); paintInfoCard(r); } }
+}
+
 /* ---------- shared pieces ---------- */
 function logoHTML(r, size = "") {
   const sym = (r.base?.symbol || "?").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "?";
   const h = hue(r.base?.address || sym);
-  if (r.image) return `<img class="logo ${size}" src="${esc(r.image)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-fb="${esc(sym)}" data-h="${h}">`;
+  const img = validImg(profileOf(r)?.icon_url) || r.image;
+  if (img) return `<img class="logo ${size}" src="${esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-fb="${esc(sym)}" data-h="${h}">`;
   return `<span class="logo logo-fb ${size}" style="--h:${h}" aria-hidden="true">${esc(sym)}</span>`;
 }
 const logoWrapHTML = (r, size = "") =>
@@ -1470,7 +1738,7 @@ function renderPills() {
 }
 function renderList() {
   for (const t of ["all", "trending", "fresh", "watch"]) $("#cnt-" + t).textContent = lists[t].length ? Math.min(lists[t].length, 100) : "";
-  for (const a of $$(".tab")) {
+  if (state.view !== "update") for (const a of $$(".tab")) {
     if (a.dataset.tab === state.tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   }
   $("#src-note").textContent = SRC_NOTE[state.tab];
@@ -2071,6 +2339,7 @@ function linkList(r) {
   const out = [];
   const ex = explorerLink(r.chain, r.base.address);
   if (ex) out.push(["Explorer", ex]);
+  if (profileOf(r)) return out.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("");
   for (const w of r.info?.websites || []) { const u = safeUrl(w?.url); if (u) out.push([w.label || "Website", u]); }
   for (const s of r.info?.socials || []) {
     const type = (s?.type || s?.platform || "").toLowerCase();
@@ -2096,6 +2365,39 @@ function paintStats(r) {
       ${addrRow("Pair address", r.pairAddress)}
     </dl>
     <div class="links">${linkList(r)}</div>`;
+}
+function profileLinks(p) {
+  const out = [];
+  if (p.website) out.push(["Website", p.website]);
+  if (p.twitter) out.push(["X", p.twitter]);
+  if (p.telegram) out.push(["Telegram", p.telegram]);
+  if (p.discord) out.push(["Discord", p.discord]);
+  for (const l of Array.isArray(p.links) ? p.links : []) out.push([String(l?.label || "Link").slice(0, 24), l?.url]);
+  return out.filter(([, u]) => safeUrl(u));
+}
+const socHTML = links => links.length ? `<div class="soc">${links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener nofollow"><span>${esc(t)}</span>↗</a>`).join("")}</div>` : "";
+function paintInfoCard(r) {
+  const p = r ? profileOf(r) : null, info = $("#info-card"), cta = $("#cta-card"), ban = $("#d-banner");
+  const bu = validImg(p?.banner_url);
+  if (bu) {
+    if (ban.dataset.src !== bu) { ban.innerHTML = `<img src="${esc(bu)}" alt="" decoding="async">`; ban.dataset.src = bu; }
+    ban.hidden = false;
+  } else { ban.hidden = true; ban.innerHTML = ""; ban.dataset.src = ""; }
+  if (p) {
+    const upd = Date.parse(p.updated_at);
+    info.innerHTML = `<div class="card-top"><h2>Token info</h2>${upd ? `<span class="note">updated ${fmtAgo(upd)}</span>` : ""}</div><div class="card-body">
+      ${p.description ? `<p class="info-desc">${esc(p.description)}</p>` : ""}
+      ${socHTML(profileLinks(p))}
+      <p class="note info-meta">Provided by the token team and checked by MemeDex. Always double-check links before connecting a wallet.</p>
+    </div>`;
+    info.hidden = false; cta.hidden = true;
+  } else {
+    info.hidden = true; info.innerHTML = "";
+    if (r && SB()) {
+      cta.innerHTML = `<div class="cta-in"><h2>Is this your token?</h2><p>Add a logo, banner, description and official links to this page. One-time fee of $${CFG.pay.usd}.</p><a class="btn-a" href="#/update/${enc(r.chain)}/${enc(r.base.address)}">Update token info</a></div>`;
+      cta.hidden = false;
+    } else cta.hidden = true;
+  }
 }
 function paintGradeCard(info) {
   const el = $("#grade-card");
@@ -2174,7 +2476,8 @@ async function openDetail(chain, pair) {
   state.view = "detail";
   const key = rowKey(chain, pair);
   state.detailKey = key;
-  $("#list-view").hidden = true; $("#detail-view").hidden = false;
+  $("#list-view").hidden = true; $("#update-view").hidden = true; $("#detail-view").hidden = false;
+  for (const a of $$('.tab[data-tab="update"]')) a.removeAttribute("aria-current");
   closeResults();
   stopDetailTimers(); destroyChart(); stopOnchain(); resetBook(key);
   tradeSide = "all";
@@ -2187,6 +2490,7 @@ async function openDetail(chain, pair) {
   if (!r) {
     $("#d-head").innerHTML = `<p class="note">Loading token…</p>`;
     ["#grade-card", "#orig-card", "#stats-card", "#sec-card"].forEach(s => $(s).innerHTML = "");
+    paintInfoCard(null);
     try { const ps = await api.dsPairs(chain, [pair], true); ps.forEach(p => upsert(normDS(p))); } catch { /* try GT next */ }
     if (!rows.get(key)) { try { (await api.gtPool(gtNetOf(chain), pair)).forEach(upsert); } catch { /* not found */ } }
     if (state.detailKey !== key) return;
@@ -2194,7 +2498,7 @@ async function openDetail(chain, pair) {
     if (!r) { $("#d-head").innerHTML = `<div class="empty"><b>Token not found</b>No pair exists at this address.<br><a class="btn" href="#/">Back to the list</a></div>`; return; }
   }
   document.title = `${r.base.symbol} ${fmtPrice(r.priceUsd)} · MemeDex`;
-  paintHead(r); paintStats(r);
+  paintHead(r); paintStats(r); paintInfoCard(r);
   paintGradeCard(sec.get(tokKey(r.chain, r.base.address)));
   paintSecCard(sec.get(tokKey(r.chain, r.base.address)));
   paintOrigCard(orig.get(tokKey(r.chain, r.base.address)));
@@ -2213,7 +2517,7 @@ function openList(tab) {
   state.view = "list"; state.detailKey = null;
   if (tab !== state.tab) { state.tab = tab; state.sort = null; }
   document.title = "MemeDex";
-  $("#detail-view").hidden = true; $("#list-view").hidden = false;
+  $("#detail-view").hidden = true; $("#update-view").hidden = true; $("#list-view").hidden = false;
   renderList(); enrichList();
   if (state.tab === "watch") hydrateWatch();
 }
@@ -2434,11 +2738,383 @@ $("#theme").addEventListener("click", () => {
   setOn(on);
 })();
 
+/* ---------- "Update token info" page ---------- */
+/* PAY:BEGIN */
+/* ---------- payments (same block in index.html and admin.html; edit src/pay-shared.js, then run build.py) ---------- */
+const PAY_METHODS = {
+  "sol":       { label: "SOL",  net: "Solana",   chain: "solana",   asset: "native", decimals: 9 },
+  "usdc-sol":  { label: "USDC", net: "Solana",   chain: "solana",   asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6, stable: true },
+  "eth-base":  { label: "ETH",  net: "Base",     chain: "base",     asset: "native", decimals: 18 },
+  "usdc-base": { label: "USDC", net: "Base",     chain: "base",     asset: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", decimals: 6, stable: true },
+  "eth-eth":   { label: "ETH",  net: "Ethereum", chain: "ethereum", asset: "native", decimals: 18 },
+  "usdc-eth":  { label: "USDC", net: "Ethereum", chain: "ethereum", asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals: 6, stable: true },
+};
+const PAY_RPC = {
+  solana: "https://solana-rpc.publicnode.com",
+  base: "https://base-rpc.publicnode.com",
+  ethereum: "https://ethereum-rpc.publicnode.com",
+};
+const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const payWallet = (wallets, methodId) => {
+  const m = PAY_METHODS[methodId];
+  return m ? (m.chain === "solana" ? String(wallets?.solana || "").trim() : String(wallets?.evm || "").trim()) : "";
+};
+async function payRpc(url, method, params) {
+  let res;
+  try {
+    res = await fetch(url, { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+  } catch (e) { e.net = true; throw e; }
+  if (!res.ok) { const e = new Error("RPC HTTP " + res.status); e.net = true; throw e; }
+  const j = await res.json();
+  if (j.error) { const e = new Error(j.error.message || "RPC error"); e.net = true; throw e; }
+  return j.result;
+}
+const payPriceCache = {};
+// live USD price of SOL or ETH, from the deepest pool of the wrapped token
+async function payUsdPrice(sym) {
+  const hit = payPriceCache[sym]; if (hit && Date.now() - hit.t < 60000) return hit.v;
+  const [chain, addr] = sym === "SOL" ? ["solana", "So11111111111111111111111111111111111111112"] : ["base", "0x4200000000000000000000000000000000000006"];
+  const res = await fetch(`https://api.dexscreener.com/tokens/v1/${chain}/${addr}`, { signal: AbortSignal.timeout(12000) });
+  const pairs = await res.json();
+  let best = null;
+  for (const p of Array.isArray(pairs) ? pairs : []) {
+    if (String(p?.baseToken?.address || "").toLowerCase() !== addr.toLowerCase()) continue;
+    const liq = Number(p?.liquidity?.usd) || 0, px = Number(p?.priceUsd);
+    if (px > 0 && (!best || liq > best.liq)) best = { liq, px };
+  }
+  if (!best) throw new Error("price unavailable");
+  payPriceCache[sym] = { v: best.px, t: Date.now() };
+  return best.px;
+}
+// how much to send for a given USD price (1% buffer on SOL/ETH for price moves)
+async function payQuote(methodId, usd) {
+  const m = PAY_METHODS[methodId];
+  if (m.stable) return { amount: usd, text: usd.toFixed(2) };
+  const px = await payUsdPrice(m.label);
+  const dp = m.label === "SOL" ? 4 : 5, f = 10 ** dp;
+  const amount = Math.ceil(usd / px * 1.01 * f) / f;
+  return { amount, text: amount.toFixed(dp), price: px };
+}
+const payFmt = (amount, label) => amount == null || !Number.isFinite(amount) ? "–"
+  : `${amount >= 1000 ? amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) : Number(amount.toPrecision(6))} ${label}`;
+/* Checks one transaction against the MemeDex wallet.
+   state: "ok" (paid enough), "fail" (definitely not valid) or "unknown" (couldn't check; review by hand). */
+async function verifyPayment(methodId, txRaw, wallets, usdRequired, minRatio = 0.97) {
+  const m = PAY_METHODS[methodId];
+  const tx = String(txRaw || "").trim();
+  const out = { method: methodId, tx, ok: false, state: "fail", amount: null, usd: null, from: null, time: null, checkedAt: Date.now(), reason: "" };
+  if (!m) return { ...out, reason: "Unknown payment method" };
+  const wallet = m.chain === "solana" ? payWallet(wallets, methodId) : payWallet(wallets, methodId).toLowerCase();
+  if (!wallet) return { ...out, state: "unknown", reason: "The payment wallet isn't set up yet" };
+  const notFound = "Transaction not found yet. Wait until it's confirmed, then check again.";
+  try {
+    if (m.chain === "solana") {
+      if (!/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(tx)) return { ...out, reason: "That doesn't look like a Solana transaction signature" };
+      const r = await payRpc(PAY_RPC.solana, "getTransaction", [tx, { encoding: "jsonParsed", maxSupportedTransactionVersion: 0, commitment: "confirmed" }]);
+      if (!r) return { ...out, reason: notFound };
+      if (r.meta?.err) return { ...out, reason: "This transaction failed on-chain" };
+      const keys = (r.transaction?.message?.accountKeys || []).map(k => typeof k === "string" ? k : k?.pubkey);
+      out.from = keys[0] || null;
+      out.time = r.blockTime ? r.blockTime * 1000 : null;
+      if (m.asset === "native") {
+        const i = keys.indexOf(wallet);
+        out.amount = i < 0 ? 0 : (r.meta.postBalances[i] - r.meta.preBalances[i]) / 1e9;
+      } else {
+        const sum = list => (list || []).filter(b => b.mint === m.asset && b.owner === wallet).reduce((s, b) => s + Number(b.uiTokenAmount?.amount || 0), 0);
+        out.amount = (sum(r.meta.postTokenBalances) - sum(r.meta.preTokenBalances)) / 10 ** m.decimals;
+      }
+    } else {
+      if (!/^0x[0-9a-fA-F]{64}$/.test(tx)) return { ...out, reason: "That doesn't look like a transaction hash (0x followed by 64 characters)" };
+      const url = PAY_RPC[m.chain];
+      const [t, rc] = await Promise.all([payRpc(url, "eth_getTransactionByHash", [tx]), payRpc(url, "eth_getTransactionReceipt", [tx])]);
+      if (!t || !rc) return { ...out, reason: notFound };
+      if (rc.status !== "0x1") return { ...out, reason: "This transaction failed on-chain" };
+      out.from = String(t.from || "").toLowerCase() || null;
+      if (m.asset === "native") out.amount = String(t.to || "").toLowerCase() === wallet ? Number(BigInt(t.value || "0x0")) / 1e18 : 0;
+      else {
+        let raw = 0n;
+        for (const l of rc.logs || []) {
+          if (String(l.address || "").toLowerCase() !== m.asset || l.topics?.[0] !== TRANSFER_TOPIC) continue;
+          if (("0x" + String(l.topics[2] || "").slice(-40)).toLowerCase() === wallet) raw += BigInt(l.data || "0x0");
+        }
+        out.amount = Number(raw) / 10 ** m.decimals;
+      }
+      const blk = await payRpc(url, "eth_getBlockByNumber", [rc.blockNumber, false]).catch(() => null);
+      out.time = blk?.timestamp ? parseInt(blk.timestamp, 16) * 1000 : null;
+    }
+  } catch {
+    return { ...out, state: "unknown", reason: "Couldn't reach the network to check this payment. Try again in a moment." };
+  }
+  if (!(out.amount > 0)) return { ...out, reason: `This transaction doesn't send ${m.label} on ${m.net} to the MemeDex wallet` };
+  try { out.usd = m.stable ? out.amount : out.amount * await payUsdPrice(m.label); } catch { out.usd = null; }
+  if (out.usd == null) return { ...out, state: "unknown", reason: `Received ${payFmt(out.amount, m.label)}, but the price check failed. It will be confirmed by hand.` };
+  if (out.usd < usdRequired * minRatio) return { ...out, reason: `Received ${payFmt(out.amount, m.label)} (≈ $${out.usd.toFixed(2)}), which is less than the $${usdRequired} fee` };
+  return { ...out, ok: true, state: "ok" };
+}
+/* ---------- end payments ---------- */
+/* PAY:END */
+const up = { ready: false, chain: "solana", token: null, method: "sol", verify: null, icon: null, banner: null, busy: false, quoteSeq: 0 };
+const UP_IMG = {
+  icon:   { max: 1 << 20, minW: 128, ratio: 1, tol: 0.08, label: "Logo" },
+  banner: { max: 3 << 20, minW: 900, ratio: 3, tol: 0.35, label: "Banner" },
+};
+const validAddr = (chain, a) => chain === "solana" ? /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a) : /^0x[0-9a-fA-F]{40}$/.test(a);
+const LINK_NORM = {
+  website: v => { if (!v) return ""; if (!/^[a-z]+:\/\//i.test(v)) v = "https://" + v; return /^https:\/\/[^\s/$.?#][^\s]*\.[^\s]{2,}$/i.test(v) ? v : null; },
+  twitter: v => { if (!v) return ""; const m = v.match(/^(?:https?:\/\/)?(?:www\.|mobile\.)?(?:x|twitter)\.com\/@?([A-Za-z0-9_]{1,15})\/?(?:[?#].*)?$/i) || v.match(/^@?([A-Za-z0-9_]{1,15})$/); return m ? "https://x.com/" + m[1] : null; },
+  telegram: v => { if (!v) return ""; const m = v.match(/^(?:https?:\/\/)?(?:www\.)?(?:t|telegram)\.me\/([A-Za-z0-9_+][A-Za-z0-9_\-/]{2,})\/?$/i) || v.match(/^@([A-Za-z0-9_]{4,32})$/); return m ? "https://t.me/" + m[1].replace(/\/+$/, "") : null; },
+  discord: v => { if (!v) return ""; const m = v.match(/^(?:https?:\/\/)?(?:www\.)?(discord\.gg\/[A-Za-z0-9-]+|discord\.com\/invite\/[A-Za-z0-9-]+)\/?$/i); return m ? "https://" + m[1] : null; },
+};
+const LINK_ERR = { website: "Use a full https:// link", twitter: "Use an X handle like @name or an x.com link", telegram: "Use a t.me link or @group", discord: "Use a discord.gg or discord.com/invite link" };
+function readLinks() {
+  const out = { errs: {} };
+  for (const el of $$("#up-form [data-link]")) {
+    const k = el.dataset.link, v = LINK_NORM[k](el.value.trim());
+    out[k] = v || null;
+    if (v === null) out.errs[k] = LINK_ERR[k];
+    el.setAttribute("aria-invalid", String(v === null));
+  }
+  out.links = [];
+  for (const i of [1, 2]) {
+    const label = $(`#up-l${i}-label`).value.trim(), raw = $(`#up-l${i}-url`).value.trim();
+    if (!label && !raw) continue;
+    const url = LINK_NORM.website(raw);
+    if (!url || !label) out.errs.links = "Each extra link needs a label and a full https:// link";
+    else out.links.push({ label, url });
+  }
+  for (const el of $$("#up-form [data-err]")) el.textContent = out.errs[el.dataset.err] || up[el.dataset.err + "Err"] || "";
+  return out;
+}
+function initUpdateForm() {
+  if (up.ready) return; up.ready = true;
+  $("#up-chains").innerHTML = Object.entries(CHAINS).map(([k, v]) => `<button class="pill" type="button" data-upchain="${k}" aria-pressed="false" title="${esc(v.name)}">${chainIconHTML(k)}${esc(v.short)}</button>`).join("");
+  $("#up-pay").innerHTML = Object.entries(PAY_METHODS).map(([k, m]) => `<button type="button" data-paym="${k}" aria-pressed="false">${chainIconHTML(m.chain)}<span>${m.label}<small>${m.net}</small></span></button>`).join("");
+  for (const el of $$(".up-fee")) el.textContent = "$" + CFG.pay.usd;
+  const f = $("#up-form");
+  f.addEventListener("click", e => {
+    const c = e.target.closest("[data-upchain]"); if (c) { setUpChain(c.dataset.upchain); up.token = null; $("#up-tok").innerHTML = ""; if ($("#up-addr").value.trim()) findToken(); paintUp(); return; }
+    const m = e.target.closest("[data-paym]"); if (m) { up.method = m.dataset.paym; up.verify = null; paintPay(); paintUp(); return; }
+    const rm = e.target.closest("[data-rm]"); if (rm) { e.preventDefault(); clearImg(rm.dataset.rm); }
+  });
+  $("#up-find").addEventListener("click", findToken);
+  $("#up-addr").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); findToken(); } });
+  $("#up-addr").addEventListener("input", () => { up.token = null; $("#up-tok").innerHTML = ""; $("#up-addr-err").textContent = ""; paintUp(); });
+  $("#up-desc").addEventListener("input", () => { $("#up-desc-n").textContent = $("#up-desc").value.length; paintUp(); });
+  for (const el of $$("#up-form [data-link], #up-form .row-l input, #up-contact")) el.addEventListener("input", paintUp);
+  $("#up-owner").addEventListener("change", paintUp);
+  $("#up-tx").addEventListener("input", () => { up.verify = null; $("#up-vres").textContent = ""; $("#up-vres").className = "vres"; paintUp(); });
+  $("#up-tx").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runVerify(); } });
+  $("#up-verify").addEventListener("click", runVerify);
+  for (const kind of ["icon", "banner"]) {
+    const input = $("#up-" + kind), drop = $(`#up-${kind}-drop`);
+    input.addEventListener("change", () => input.files[0] && pickImg(kind, input.files[0]));
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); const file = e.dataTransfer?.files?.[0]; if (file) pickImg(kind, file); });
+  }
+  f.addEventListener("submit", submitUpdate);
+  setUpChain(up.chain); paintPay();
+}
+function setUpChain(chain) {
+  up.chain = chain;
+  for (const b of $$("#up-chains [data-upchain]")) b.setAttribute("aria-pressed", String(b.dataset.upchain === chain));
+}
+async function findToken() {
+  const addr = $("#up-addr").value.trim(), chain = up.chain, box = $("#up-tok"), err = $("#up-addr-err");
+  up.token = null; err.textContent = "";
+  if (!addr) { paintUp(); return; }
+  if (!validAddr(chain, addr)) { err.textContent = `That isn't a valid ${chainName(chain)} contract address.`; paintUp(); return; }
+  box.innerHTML = `<p class="hint">Looking up the token…</p>`;
+  let r = null;
+  try {
+    const pairs = await api.dsTokens(chain, [addr]);
+    for (const p of pairs) {
+      const x = normDS(p);
+      if (x && normAddr(x.base.address) === normAddr(addr) && (!r || (x.liquidity || 0) > (r.liquidity || 0))) r = x;
+    }
+  } catch { /* lookup is a convenience, not required */ }
+  if ($("#up-addr").value.trim() !== addr || up.chain !== chain) return;
+  up.token = r ? { chain, address: normAddr(r.base.address), symbol: r.base.symbol || "", name: r.base.name || "", row: r }
+               : { chain, address: normAddr(addr), symbol: "", name: "", row: null };
+  const had = profiles.get(tokKey(chain, addr));
+  box.innerHTML = r
+    ? `<div class="tok-found">${logoHTML(r)}<div class="t"><b>${esc(r.base.symbol)} <span style="display:inline">${esc(r.base.name || "")}</span></b><span>${chainIconHTML(chain, "in")}${esc(chainName(chain))} · ${esc(short(addr))}</span></div><div class="v">${fmtPrice(r.priceUsd)}<br><span class="note">Liq ${fmtUsd(r.liquidity)}</span></div></div>${had ? `<p class="hint" style="margin-top:8px">This token already has info on MemeDex. An approved request replaces it.</p>` : ""}`
+    : `<p class="vres unknown">No trading pair found for this address yet. You can still submit; we'll check it during review.</p>`;
+  paintUp();
+}
+async function pickImg(kind, file) {
+  const rule = UP_IMG[kind], drop = $(`#up-${kind}-drop`);
+  up[kind + "Err"] = "";
+  const fail = msg => { up[kind + "Err"] = msg; $(`#up-${kind}`).value = ""; readLinks(); paintUp(); };
+  if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) return fail("Use a PNG, JPG, WEBP or GIF image");
+  if (file.size > rule.max) return fail(`${rule.label} must be ${rule.max >> 20} MB or smaller`);
+  const url = URL.createObjectURL(file);
+  const dims = await new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res(null); im.src = url; });
+  if (!dims) { URL.revokeObjectURL(url); return fail("This image couldn't be read"); }
+  const [w, h] = dims, ratio = w / h;
+  if (w < rule.minW) { URL.revokeObjectURL(url); return fail(`${rule.label} must be at least ${rule.minW} px wide (this one is ${w} px)`); }
+  if (Math.abs(ratio - rule.ratio) / rule.ratio > rule.tol) { URL.revokeObjectURL(url); return fail(kind === "icon" ? `Logo must be square (this one is ${w}×${h})` : `Banner should be about 3:1, like 1500×500 (this one is ${w}×${h})`); }
+  if (up[kind]) URL.revokeObjectURL(up[kind].url);
+  up[kind] = { file, url, w, h };
+  drop.querySelector(".drop-in").innerHTML = `<img src="${url}" alt=""><span class="hint">${w}×${h} · ${(file.size / 1024).toFixed(0)} KB</span>`;
+  if (!drop.querySelector(".rm")) drop.insertAdjacentHTML("beforeend", `<button class="btn-b rm" type="button" data-rm="${kind}">Remove</button>`);
+  readLinks(); paintUp();
+}
+function clearImg(kind) {
+  if (up[kind]) URL.revokeObjectURL(up[kind].url);
+  up[kind] = null; up[kind + "Err"] = ""; $(`#up-${kind}`).value = "";
+  const drop = $(`#up-${kind}-drop`); drop.querySelector(".rm")?.remove();
+  drop.querySelector(".drop-in").innerHTML = kind === "icon" ? `<b>Upload logo</b><br>PNG, JPG, WEBP or GIF<br>min 128×128, max 1 MB` : `<b>Upload banner</b><br>PNG, JPG, WEBP or GIF<br>min 900 px wide, max 3 MB`;
+  readLinks(); paintUp();
+}
+async function paintPay() {
+  const m = PAY_METHODS[up.method], wallet = payWallet(CFG.pay.wallets, up.method), seq = ++up.quoteSeq;
+  for (const b of $$("#up-pay [data-paym]")) b.setAttribute("aria-pressed", String(b.dataset.paym === up.method));
+  $("#up-wallet").textContent = wallet || "Payment wallet not set up yet";
+  $("#up-wallet-copy").dataset.copy = wallet; $("#up-wallet-copy").hidden = !wallet;
+  $("#up-pay-hint").textContent = m.stable
+    ? `Send USDC on ${m.net} only. USDC sent on another network won't arrive.`
+    : `Send ${m.label} on ${m.net}. The amount includes a 1% buffer for price moves.`;
+  $("#up-amt").textContent = "…"; $("#up-amt-copy").hidden = true;
+  try {
+    const q = await payQuote(up.method, CFG.pay.usd);
+    if (seq !== up.quoteSeq) return;
+    $("#up-amt").textContent = `${q.text} ${m.label}`; $("#up-amt-copy").dataset.copy = q.text; $("#up-amt-copy").hidden = false;
+  } catch {
+    if (seq === up.quoteSeq) $("#up-amt").textContent = `$${CFG.pay.usd} worth of ${m.label}`;
+  }
+}
+async function runVerify() {
+  const tx = $("#up-tx").value.trim(), out = $("#up-vres"), btn = $("#up-verify");
+  if (!tx) { out.className = "vres fail"; out.textContent = "Paste the transaction hash first."; return; }
+  btn.disabled = true; out.className = "vres wait"; out.textContent = "Checking the transaction…";
+  const method = up.method;
+  let v = await verifyPayment(method, tx, CFG.pay.wallets, CFG.pay.usd, CFG.pay.minRatio);
+  btn.disabled = false;
+  if ($("#up-tx").value.trim() !== tx || up.method !== method) return;
+  if (v.state === "ok" && v.time && Date.now() - v.time > 7 * 86400000) v = { ...v, ok: false, state: "fail", reason: "This payment is more than 7 days old. Each request needs a new payment." };
+  up.verify = v;
+  const m = PAY_METHODS[method];
+  out.className = "vres " + v.state;
+  out.textContent = v.state === "ok" ? `✓ Payment received: ${payFmt(v.amount, m.label)} (≈ $${v.usd.toFixed(2)})${v.time ? " · " + fmtAgo(v.time) : ""}`
+    : v.state === "unknown" ? `! ${v.reason} You can still submit; we'll check the payment by hand.`
+    : `✗ ${v.reason}`;
+  paintUp();
+}
+function upMissing(links) {
+  const miss = [];
+  if (!up.token) miss.push("find your token");
+  const hasContent = $("#up-desc").value.trim() || links.website || links.twitter || links.telegram || links.discord || links.links.length || up.icon || up.banner;
+  if (!hasContent) miss.push("add a logo, banner, description or link");
+  if (Object.keys(links.errs).length || up.iconErr || up.bannerErr) miss.push("fix the highlighted fields");
+  if (!payWallet(CFG.pay.wallets, up.method)) miss.push("payment isn't available yet");
+  else if (!up.verify || up.verify.state === "fail") miss.push("check your payment");
+  if ($("#up-contact").value.trim().length < 3) miss.push("add a contact");
+  if (!$("#up-owner").checked) miss.push("confirm you're on the team");
+  return miss;
+}
+function paintPreview(links) {
+  const t = up.token, r = t?.row;
+  $("#pv-banner").innerHTML = up.banner ? `<img src="${up.banner.url}" alt="">` : "Banner 1500 × 500";
+  const logo = up.icon ? `<img class="logo" src="${up.icon.url}" alt="">` : r ? logoHTML(r) : `<span class="pv-ph">?</span>`;
+  $("#pv-logo").outerHTML = `<span id="pv-logo" style="display:contents">${logo}</span>`;
+  $("#pv-sym").textContent = t?.symbol || "Your token";
+  $("#pv-name").textContent = t ? `${t.name || short(t.address)} · ${chainName(t.chain)}` : "Name · chain";
+  $("#pv-desc").textContent = $("#up-desc").value.trim();
+  const list = [];
+  if (links.website) list.push(["Website", links.website]);
+  if (links.twitter) list.push(["X", links.twitter]);
+  if (links.telegram) list.push(["Telegram", links.telegram]);
+  if (links.discord) list.push(["Discord", links.discord]);
+  for (const l of links.links) list.push([l.label, l.url]);
+  $("#pv-links").outerHTML = `<div class="soc" id="pv-links">${list.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener nofollow"><span>${esc(n)}</span>↗</a>`).join("")}</div>`;
+}
+function paintUp() {
+  if (!up.ready) return;
+  const links = readLinks(), miss = upMissing(links);
+  paintPreview(links);
+  $("#up-send").disabled = up.busy || miss.length > 0;
+  $("#up-miss").textContent = miss.length ? "To submit: " + miss.join(" · ") : "";
+}
+const userErr = msg => Object.assign(new Error(msg), { user: true });
+// randomUUID only exists on https pages; getRandomValues works everywhere
+const uuid4 = () => crypto.randomUUID?.() || ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+async function sbUpload(path, file) {
+  const s = SB();
+  const res = await fetch(`${s.url}/storage/v1/object/token-media/${path}`, { method: "POST", headers: sbHeaders({ "content-type": file.type, "x-upsert": "false" }), body: file });
+  if (!res.ok) throw userErr("Image upload failed. Use a PNG, JPG, WEBP or GIF within the size limit and try again.");
+  return `${s.url}/storage/v1/object/public/token-media/${path}`;
+}
+async function submitUpdate(e) {
+  e.preventDefault();
+  const links = readLinks();
+  if (up.busy || upMissing(links).length) { paintUp(); return; }
+  up.busy = true; paintUp();
+  const status = $("#up-status"), t = up.token, v = up.verify;
+  const id = uuid4(), ref = "MD-" + id.slice(0, 8).toUpperCase();
+  const ext = f => ({ "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" })[f.type] || "png";
+  try {
+    status.textContent = "Uploading images…";
+    const icon_url = up.icon ? await sbUpload(`requests/${id}/icon.${ext(up.icon.file)}`, up.icon.file) : null;
+    const banner_url = up.banner ? await sbUpload(`requests/${id}/banner.${ext(up.banner.file)}`, up.banner.file) : null;
+    status.textContent = "Sending your request…";
+    const body = {
+      id, chain: t.chain, address: t.address, symbol: t.symbol || null, name: t.name || null,
+      description: $("#up-desc").value.trim() || null,
+      website: links.website, twitter: links.twitter, telegram: links.telegram, discord: links.discord, links: links.links,
+      icon_url, banner_url, contact: $("#up-contact").value.trim(),
+      pay_method: up.method, pay_tx: v.tx,
+      pay_check: { state: v.state, amount: v.amount, usd: v.usd, from: v.from, time: v.time, checkedAt: v.checkedAt, reason: v.reason || null },
+    };
+    const res = await fetch(`${SB().url}/rest/v1/profile_requests`, { method: "POST", headers: sbHeaders({ "content-type": "application/json", Prefer: "return=minimal" }), body: JSON.stringify(body) });
+    if (res.status === 409) throw userErr("This payment was already used for another request. Each request needs its own payment.");
+    if (!res.ok) throw userErr("The request was rejected. Check your links and details, then try again.");
+    const back = t.row ? detailHref(t.row) : "#/";
+    $("#up-done").innerHTML = `<div class="okmark" aria-hidden="true">✓</div><h2>Request received</h2>
+      <p>Reference <b>${ref}</b> for <b>${esc(t.symbol || short(t.address))}</b> on ${esc(chainName(t.chain))}.</p>
+      <p>We'll confirm the payment and review your info. Once it's approved, the logo, banner and links show up on MemeDex automatically. If anything needs fixing we'll contact <b>${esc(body.contact)}</b>.</p>
+      <p>Keep your reference and transaction hash in case you need to reach us.</p>
+      <div class="inline" style="flex-wrap:wrap"><a class="btn-a" href="${back}">${t.row ? "Back to the token" : "Back to market"}</a>${safeUrl(CFG.pay.support) ? `<a class="btn-b" href="${esc(CFG.pay.support)}" target="_blank" rel="noopener">Contact MemeDex</a>` : ""}</div>`;
+    $("#up-form").hidden = true; $("#up-done").hidden = false; window.scrollTo(0, 0);
+    status.textContent = "";
+  } catch (err) {
+    status.textContent = err.user ? err.message : "Couldn't send the request. Check your connection and try again.";
+  } finally { up.busy = false; paintUp(); }
+}
+function resetUpForm() {
+  $("#up-form").reset();
+  for (const k of ["icon", "banner"]) if (up[k] || up[k + "Err"]) clearImg(k);
+  up.token = null; up.verify = null;
+  $("#up-tok").innerHTML = ""; $("#up-vres").textContent = ""; $("#up-vres").className = "vres"; $("#up-desc-n").textContent = "0";
+  $("#up-done").hidden = true; $("#up-form").hidden = false;
+}
+function openUpdate(chain, addr) {
+  stopDetailTimers(); destroyChart(); stopOnchain();
+  state.view = "update"; state.detailKey = null;
+  document.title = "Update token info · MemeDex";
+  $("#list-view").hidden = true; $("#detail-view").hidden = true; $("#update-view").hidden = false;
+  closeResults();
+  for (const a of $$(".tab")) { if (a.dataset.tab === "update") a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); }
+  window.scrollTo(0, 0);
+  const on = !!SB();
+  $("#up-off").hidden = on; $("#up-form").hidden = !on;
+  if (!on) { $("#up-done").hidden = true; return; }
+  initUpdateForm();
+  if (!$("#up-done").hidden) resetUpForm(); // coming back after a submitted request: start clean
+  if (chain && CHAINS[chain]) {
+    setUpChain(chain);
+    if (addr && $("#up-addr").value.trim() !== addr) { $("#up-addr").value = addr; findToken(); }
+  }
+  paintUp();
+}
+
 /* router */
 function route() {
   const h = location.hash || "#/";
   const m = h.match(/^#\/t\/([^/]+)\/(.+)$/);
   if (m) { openDetail(decodeURIComponent(m[1]), decodeURIComponent(m[2])); return; }
+  const u = h.match(/^#\/update(?:\/([^/]+)\/([^/]+))?\/?$/);
+  if (u) { openUpdate(u[1] && decodeURIComponent(u[1]), u[2] && decodeURIComponent(u[2])); return; }
   openList(h === "#/trending" ? "trending" : h === "#/new" || h === "#/baru" ? "fresh" : h === "#/watchlist" ? "watch" : "all");
 }
 window.addEventListener("hashchange", route);
@@ -2446,6 +3122,7 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) live
 
 route();
 loadFeeds();
+loadProfiles(); setInterval(loadProfiles, CFG.profilesMs);
 setInterval(liveTick, CFG.liveMs);
 setInterval(() => loadFeeds(), CFG.feedMs);
 setInterval(paintLive, 1000);

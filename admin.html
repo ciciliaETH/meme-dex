@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>MemeDex Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23ff2e8a'/%3E%3Crect x='16' y='19' width='9' height='9' fill='%23fff'/%3E%3Crect x='38' y='23' width='11' height='4' fill='%23fff'/%3E%3Cpath d='M13 40l8 5 7-6 7 5 10-10' fill='none' stroke='%23fff' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@700&display=swap">
+<style>
+/* Layout: top bar; tabs (Requests / Token profiles); list on the left, editor on the right (stacked on phones). */
+:root {
+  --bg: #07050a; --panel: #0e0a12; --panel-2: #151019; --panel-3: #1c1522;
+  --line: rgba(255, 255, 255, .07); --line-2: rgba(255, 255, 255, .12);
+  --fg: #f5eff7; --muted: #9d91a6; --dim: #62576b;
+  --accent: #ff3d9a; --accent-soft: rgba(255, 61, 154, .14);
+  --up: #38cfff; --up-soft: rgba(56, 207, 255, .14); --down: #ff4f8f; --down-soft: rgba(255, 79, 143, .14);
+  --warn: #ffb547; --warn-soft: rgba(255, 181, 71, .13);
+  --btn-hi: #ff7cc0; --btn-mid: #ff2e8a; --btn-lo: #d0157a;
+  --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; border-radius: 0 !important; }
+html, body { margin: 0; }
+body { min-height: 100vh; background: radial-gradient(700px 520px at 100% -10%, rgba(255, 46, 147, .22), transparent 65%), var(--bg); color: var(--fg); font: 500 13.5px/1.45 var(--font-body); -webkit-font-smoothing: antialiased; }
+button, input, textarea, select { font: inherit; color: inherit; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; padding: 12px max(16px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand svg { width: 30px; height: 30px; flex: none; }
+.brand b { font: 700 17px var(--font-display); }
+.brand b span { color: var(--accent); }
+.brand em { font-style: normal; font: 700 10.5px var(--font-body); letter-spacing: .14em; color: var(--muted); border: 1px solid var(--line-2); padding: 2px 6px; }
+.who { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; min-width: 0; }
+.who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-left, 0px)) 60px; }
+.panel { background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); }
+.card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; flex-wrap: wrap; }
+h1 { font: 700 22px var(--font-display); margin: 0; }
+h2 { font: 700 14px var(--font-display); margin: 0; }
+.note { color: var(--dim); font-size: 12px; font-weight: 600; margin: 0; }
+.btn-a, .btn-b, .btn-d { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 16px; font: 800 12.5px var(--font-body); cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn-a { color: #fff; border: 1px solid rgba(255, 150, 200, .55); background: linear-gradient(180deg, var(--btn-hi), var(--btn-mid) 55%, var(--btn-lo)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
+.btn-b { color: var(--fg); border: 1px solid var(--line-2); background: var(--panel-2); }
+.btn-b:hover { border-color: var(--accent); color: var(--accent); }
+.btn-d { color: var(--down); border: 1px solid color-mix(in srgb, var(--down) 45%, transparent); background: var(--down-soft); }
+.btn-d.armed { color: #fff; background: var(--down); }
+.btn-a:disabled, .btn-b:disabled, .btn-d:disabled { opacity: .45; cursor: not-allowed; }
+.sm { height: 30px; padding: 0 10px; font-size: 11.5px; }
+.inp { width: 100%; height: 38px; padding: 0 11px; border: 1px solid var(--line-2); background: var(--panel-2); outline: none; font-weight: 600; min-width: 0; }
+textarea.inp { height: auto; min-height: 92px; padding: 9px 11px; resize: vertical; line-height: 1.5; font-weight: 500; }
+.inp:focus { border-color: color-mix(in srgb, var(--accent) 60%, transparent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.fld { display: grid; gap: 5px; min-width: 0; }
+.fld > label, .fld > .lbl { font-size: 11.5px; font-weight: 700; color: var(--muted); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row-l { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 8px; }
+.inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* sign in */
+.login { max-width: 400px; margin: 10vh auto 0; padding: 24px; display: grid; gap: 14px; }
+.login p { margin: 0; color: var(--muted); }
+.msg { font-size: 12.5px; font-weight: 700; padding: 9px 11px; border: 1px solid var(--line); margin: 0; }
+.msg:empty { display: none; }
+.msg.ok { color: var(--up); background: var(--up-soft); }
+.msg.bad { color: var(--down); background: var(--down-soft); }
+.msg.warn { color: var(--warn); background: var(--warn-soft); }
+/* tabs + filters */
+.tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.tabs button, .pill { height: 34px; padding: 0 14px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); font-weight: 800; cursor: pointer; }
+.tabs button[aria-pressed="true"], .pill[aria-pressed="true"] { color: #fff; border-color: rgba(255, 150, 200, .55); background: linear-gradient(180deg, var(--btn-hi), var(--btn-mid) 55%, var(--btn-lo)); }
+.tabs .cnt { margin-left: 6px; font-size: 11px; opacity: .85; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { height: 30px; font-size: 12px; padding: 0 11px; }
+.desk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 520px); gap: 12px; align-items: start; }
+@media (max-width: 1100px) { .desk { grid-template-columns: minmax(0, 1fr); } }
+/* tables */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 12px; text-align: left; border-top: 1px solid var(--line); white-space: nowrap; font-size: 12.5px; font-weight: 600; }
+th { color: var(--dim); font-size: 10.5px; letter-spacing: .05em; font-weight: 800; border-top: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--panel-2); }
+tbody tr.on td { background: var(--accent-soft); }
+.tok { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.tok img, .tok .ph { width: 28px; height: 28px; object-fit: cover; flex: none; background: var(--panel-3); }
+.tok b { display: block; font-weight: 800; }
+.tok small { color: var(--dim); font-size: 11px; }
+.st { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; padding: 3px 7px; display: inline-block; }
+.st.pending { color: var(--warn); background: var(--warn-soft); }
+.st.approved, .st.ok { color: var(--up); background: var(--up-soft); }
+.st.rejected, .st.fail { color: var(--down); background: var(--down-soft); }
+.st.unknown { color: var(--muted); background: var(--panel-3); }
+.empty { padding: 34px 16px; text-align: center; color: var(--muted); }
+/* editor */
+.ed { position: sticky; top: 70px; }
+@media (max-width: 1100px) { .ed { position: static; } }
+.ed-body { padding: 0 16px 16px; display: grid; gap: 14px; }
+.sec { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.sec > h3 { font: 800 11px var(--font-body); letter-spacing: .1em; color: var(--dim); margin: 0; text-transform: uppercase; }
+.kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 10px; font-size: 12.5px; }
+.kv dt { color: var(--dim); font-weight: 700; }
+.kv dd { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+.imgs { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; }
+.imgbox { position: relative; display: grid; place-items: center; gap: 4px; min-height: 120px; border: 1px dashed var(--line-2); background: var(--panel-2); color: var(--muted); font-size: 11.5px; font-weight: 700; text-align: center; padding: 8px; overflow: hidden; }
+.imgbox img { max-width: 100%; display: block; }
+.imgbox.icon img { width: 96px; height: 96px; object-fit: cover; }
+.imgbox.banner img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; }
+.imgbox input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--line); }
+code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+@media (max-width: 640px) { .row2 { grid-template-columns: 1fr; } .imgs { grid-template-columns: 1fr; } .who span { display: none; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="./"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#ff2e8a"/><rect x="16" y="19" width="9" height="9" fill="#fff"/><rect x="38" y="23" width="11" height="4" fill="#fff"/><path d="M13 40l8 5 7-6 7 5 10-10" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="square"/><path d="M38 34h7v7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="square"/></svg><b>Meme<span>Dex</span></b><em>ADMIN</em></a>
+  <div class="who" id="who" hidden><span id="who-email"></span><button class="btn-b sm" type="button" id="signout">Sign out</button></div>
+</header>
+
+<main class="wrap">
+  <div id="v-off" class="panel login" hidden><h1>Not set up yet</h1><p>Add the Supabase project URL and anon key at the top of admin.html.</p></div>
+
+  <form id="v-login" class="panel login" hidden>
+    <h1>Admin sign in</h1>
+    <p>Only accounts listed as MemeDex admins can open this panel.</p>
+    <div class="fld"><label for="lg-email">Email</label><input class="inp" id="lg-email" type="email" autocomplete="username" required></div>
+    <div class="fld"><label for="lg-pass">Password</label><input class="inp" id="lg-pass" type="password" autocomplete="current-password"></div>
+    <div class="inline"><button class="btn-a" type="submit">Sign in</button><button class="btn-b" type="button" id="lg-link">Email me a sign-in link</button></div>
+    <p class="msg" id="lg-msg" role="status"></p>
+  </form>
+
+  <div id="v-noadmin" class="panel login" hidden><h1>No admin access</h1><p>You're signed in, but this account isn't a MemeDex admin.</p></div>
+
+  <div id="v-app" hidden>
+    <div class="tabs" role="group" aria-label="Section">
+      <button type="button" data-view="requests" aria-pressed="true">Requests<span class="cnt" id="cnt-pending"></span></button>
+      <button type="button" data-view="profiles" aria-pressed="false">Token profiles<span class="cnt" id="cnt-profiles"></span></button>
+      <span class="note" id="app-msg" role="status" style="margin-left:auto"></span>
+    </div>
+
+    <div class="desk">
+      <section class="panel" id="list-panel">
+        <div class="card-top">
+          <div class="pills" id="req-filter" role="group" aria-label="Status filter">
+            <button class="pill" type="button" data-st="pending" aria-pressed="true">Pending</button>
+            <button class="pill" type="button" data-st="approved" aria-pressed="false">Approved</button>
+            <button class="pill" type="button" data-st="rejected" aria-pressed="false">Rejected</button>
+            <button class="pill" type="button" data-st="all" aria-pressed="false">All</button>
+          </div>
+          <div class="inline" id="prof-tools" hidden><input class="inp" id="prof-q" placeholder="Search symbol or address" style="width:220px"><button class="btn-a sm" type="button" id="prof-new">New profile</button></div>
+          <button class="btn-b sm" type="button" id="reload">Refresh</button>
+        </div>
+        <div class="tbl-wrap"><table id="list"></table></div>
+      </section>
+      <section class="panel ed" id="editor"><div class="empty">Pick a request or a profile to see it here.</div></section>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+"use strict";
+/* ---------- settings (keep in sync with CFG.supabase and CFG.pay in index.html) ---------- */
+const ADMIN_CFG = {
+  supabase: { url: "", anonKey: "" },
+  pay: { usd: 99, minRatio: 0.97, wallets: { solana: "", evm: "" } },
+};
+const CHAINS = {
+  solana:    { name: "Solana",    explorer: "https://solscan.io",                    addr: "/account/" },
+  ethereum:  { name: "Ethereum",  explorer: "https://etherscan.io",                  addr: "/address/" },
+  bsc:       { name: "BNB Chain", explorer: "https://bscscan.com",                   addr: "/address/" },
+  base:      { name: "Base",      explorer: "https://basescan.org",                  addr: "/address/" },
+  arbitrum:  { name: "Arbitrum",  explorer: "https://arbiscan.io",                   addr: "/address/" },
+  polygon:   { name: "Polygon",   explorer: "https://polygonscan.com",               addr: "/address/" },
+  robinhood: { name: "Robinhood", explorer: "https://robinhoodchain.blockscout.com", addr: "/address/" },
+};
+
+/* PAY:BEGIN */
+/* ---------- payments (same block in index.html and admin.html; edit src/pay-shared.js, then run build.py) ---------- */
+const PAY_METHODS = {
+  "sol":       { label: "SOL",  net: "Solana",   chain: "solana",   asset: "native", decimals: 9 },
+  "usdc-sol":  { label: "USDC", net: "Solana",   chain: "solana",   asset: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6, stable: true },
+  "eth-base":  { label: "ETH",  net: "Base",     chain: "base",     asset: "native", decimals: 18 },
+  "usdc-base": { label: "USDC", net: "Base",     chain: "base",     asset: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", decimals: 6, stable: true },
+  "eth-eth":   { label: "ETH",  net: "Ethereum", chain: "ethereum", asset: "native", decimals: 18 },
+  "usdc-eth":  { label: "USDC", net: "Ethereum", chain: "ethereum", asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals: 6, stable: true },
+};
+const PAY_RPC = {
+  solana: "https://solana-rpc.publicnode.com",
+  base: "https://base-rpc.publicnode.com",
+  ethereum: "https://ethereum-rpc.publicnode.com",
+};
+const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const payWallet = (wallets, methodId) => {
+  const m = PAY_METHODS[methodId];
+  return m ? (m.chain === "solana" ? String(wallets?.solana || "").trim() : String(wallets?.evm || "").trim()) : "";
+};
+async function payRpc(url, method, params) {
+  let res;
+  try {
+    res = await fetch(url, { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+  } catch (e) { e.net = true; throw e; }
+  if (!res.ok) { const e = new Error("RPC HTTP " + res.status); e.net = true; throw e; }
+  const j = await res.json();
+  if (j.error) { const e = new Error(j.error.message || "RPC error"); e.net = true; throw e; }
+  return j.result;
+}
+const payPriceCache = {};
+// live USD price of SOL or ETH, from the deepest pool of the wrapped token
+async function payUsdPrice(sym) {
+  const hit = payPriceCache[sym]; if (hit && Date.now() - hit.t < 60000) return hit.v;
+  const [chain, addr] = sym === "SOL" ? ["solana", "So11111111111111111111111111111111111111112"] : ["base", "0x4200000000000000000000000000000000000006"];
+  const res = await fetch(`https://api.dexscreener.com/tokens/v1/${chain}/${addr}`, { signal: AbortSignal.timeout(12000) });
+  const pairs = await res.json();
+  let best = null;
+  for (const p of Array.isArray(pairs) ? pairs : []) {
+    if (String(p?.baseToken?.address || "").toLowerCase() !== addr.toLowerCase()) continue;
+    const liq = Number(p?.liquidity?.usd) || 0, px = Number(p?.priceUsd);
+    if (px > 0 && (!best || liq > best.liq)) best = { liq, px };
+  }
+  if (!best) throw new Error("price unavailable");
+  payPriceCache[sym] = { v: best.px, t: Date.now() };
+  return best.px;
+}
+// how much to send for a given USD price (1% buffer on SOL/ETH for price moves)
+async function payQuote(methodId, usd) {
+  const m = PAY_METHODS[methodId];
+  if (m.stable) return { amount: usd, text: usd.toFixed(2) };
+  const px = await payUsdPrice(m.label);
+  const dp = m.label === "SOL" ? 4 : 5, f = 10 ** dp;
+  const amount = Math.ceil(usd / px * 1.01 * f) / f;
+  return { amount, text: amount.toFixed(dp), price: px };
+}
+const payFmt = (amount, label) => amount == null || !Number.isFinite(amount) ? "–"
+  : `${amount >= 1000 ? amount.toLocaleString("en-US", { maximumFractionDigits: 2 }) : Number(amount.toPrecision(6))} ${label}`;
+/* Checks one transaction against the MemeDex wallet.
+   state: "ok" (paid enough), "fail" (definitely not valid) or "unknown" (couldn't check; review by hand). */
+async function verifyPayment(methodId, txRaw, wallets, usdRequired, minRatio = 0.97) {
+  const m = PAY_METHODS[methodId];
+  const tx = String(txRaw || "").trim();
+  const out = { method: methodId, tx, ok: false, state: "fail", amount: null, usd: null, from: null, time: null, checkedAt: Date.now(), reason: "" };
+  if (!m) return { ...out, reason: "Unknown payment method" };
+  const wallet = m.chain === "solana" ? payWallet(wallets, methodId) : payWallet(wallets, methodId).toLowerCase();
+  if (!wallet) return { ...out, state: "unknown", reason: "The payment wallet isn't set up yet" };
+  const notFound = "Transaction not found yet. Wait until it's confirmed, then check again.";
+  try {
+    if (m.chain === "solana") {
+      if (!/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(tx)) return { ...out, reason: "That doesn't look like a Solana transaction signature" };
+      const r = await payRpc(PAY_RPC.solana, "getTransaction", [tx, { encoding: "jsonParsed", maxSupportedTransactionVersion: 0, commitment: "confirmed" }]);
+      if (!r) return { ...out, reason: notFound };
+      if (r.meta?.err) return { ...out, reason: "This transaction failed on-chain" };
+      const keys = (r.transaction?.message?.accountKeys || []).map(k => typeof k === "string" ? k : k?.pubkey);
+      out.from = keys[0] || null;
+      out.time = r.blockTime ? r.blockTime * 1000 : null;
+      if (m.asset === "native") {
+        const i = keys.indexOf(wallet);
+        out.amount = i < 0 ? 0 : (r.meta.postBalances[i] - r.meta.preBalances[i]) / 1e9;
+      } else {
+        const sum = list => (list || []).filter(b => b.mint === m.asset && b.owner === wallet).reduce((s, b) => s + Number(b.uiTokenAmount?.amount || 0), 0);
+        out.amount = (sum(r.meta.postTokenBalances) - sum(r.meta.preTokenBalances)) / 10 ** m.decimals;
+      }
+    } else {
+      if (!/^0x[0-9a-fA-F]{64}$/.test(tx)) return { ...out, reason: "That doesn't look like a transaction hash (0x followed by 64 characters)" };
+      const url = PAY_RPC[m.chain];
+      const [t, rc] = await Promise.all([payRpc(url, "eth_getTransactionByHash", [tx]), payRpc(url, "eth_getTransactionReceipt", [tx])]);
+      if (!t || !rc) return { ...out, reason: notFound };
+      if (rc.status !== "0x1") return { ...out, reason: "This transaction failed on-chain" };
+      out.from = String(t.from || "").toLowerCase() || null;
+      if (m.asset === "native") out.amount = String(t.to || "").toLowerCase() === wallet ? Number(BigInt(t.value || "0x0")) / 1e18 : 0;
+      else {
+        let raw = 0n;
+        for (const l of rc.logs || []) {
+          if (String(l.address || "").toLowerCase() !== m.asset || l.topics?.[0] !== TRANSFER_TOPIC) continue;
+          if (("0x" + String(l.topics[2] || "").slice(-40)).toLowerCase() === wallet) raw += BigInt(l.data || "0x0");
+        }
+        out.amount = Number(raw) / 10 ** m.decimals;
+      }
+      const blk = await payRpc(url, "eth_getBlockByNumber", [rc.blockNumber, false]).catch(() => null);
+      out.time = blk?.timestamp ? parseInt(blk.timestamp, 16) * 1000 : null;
+    }
+  } catch {
+    return { ...out, state: "unknown", reason: "Couldn't reach the network to check this payment. Try again in a moment." };
+  }
+  if (!(out.amount > 0)) return { ...out, reason: `This transaction doesn't send ${m.label} on ${m.net} to the MemeDex wallet` };
+  try { out.usd = m.stable ? out.amount : out.amount * await payUsdPrice(m.label); } catch { out.usd = null; }
+  if (out.usd == null) return { ...out, state: "unknown", reason: `Received ${payFmt(out.amount, m.label)}, but the price check failed. It will be confirmed by hand.` };
+  if (out.usd < usdRequired * minRatio) return { ...out, reason: `Received ${payFmt(out.amount, m.label)} (≈ $${out.usd.toFixed(2)}), which is less than the $${usdRequired} fee` };
+  return { ...out, ok: true, state: "ok" };
+}
+/* ---------- end payments ---------- */
+/* PAY:END */
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ESC[c]);
+const short = a => a && a.length > 13 ? a.slice(0, 6) + "…" + a.slice(-4) : (a || "–");
+const safeUrl = u => typeof u === "string" && /^https:\/\//i.test(u) ? u : null;
+const normAddr = a => (typeof a === "string" && /^0x[0-9a-f]+$/i.test(a)) ? a.toLowerCase() : (a || "");
+const fmtDate = t => t ? new Date(t).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "–";
+function fmtAgo(ts) {
+  if (!ts) return "";
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  return s < 60 ? "just now" : s < 3600 ? Math.floor(s / 60) + "m ago" : s < 86400 ? Math.floor(s / 3600) + "h ago" : Math.floor(s / 86400) + "d ago";
+}
+const chainName = c => CHAINS[c]?.name || c || "?";
+const addrLink = (c, a) => CHAINS[c] && a ? CHAINS[c].explorer + CHAINS[c].addr + encodeURIComponent(a) : null;
+const txLink = (m, tx) => { const c = PAY_METHODS[m]?.chain; return CHAINS[c] && tx ? CHAINS[c].explorer + "/tx/" + encodeURIComponent(tx) : null; };
+const say = (t, cls = "") => { const el = $("#app-msg"); el.textContent = t; el.style.color = cls === "bad" ? "var(--down)" : cls === "ok" ? "var(--up)" : ""; if (t) setTimeout(() => { if (el.textContent === t) el.textContent = ""; }, 6000); };
+
+const LINK_NORM = {
+  website: v => !v ? "" : (/^https:\/\/\S+\.\S{2,}$/i.test(v = /^[a-z]+:\/\//i.test(v) ? v : "https://" + v) ? v : null),
+  twitter: v => { if (!v) return ""; const m = v.match(/^(?:https?:\/\/)?(?:www\.|mobile\.)?(?:x|twitter)\.com\/@?([A-Za-z0-9_]{1,15})\/?(?:[?#].*)?$/i) || v.match(/^@?([A-Za-z0-9_]{1,15})$/); return m ? "https://x.com/" + m[1] : null; },
+  telegram: v => { if (!v) return ""; const m = v.match(/^(?:https?:\/\/)?(?:www\.)?(?:t|telegram)\.me\/([A-Za-z0-9_+][A-Za-z0-9_\-/]{2,})\/?$/i) || v.match(/^@([A-Za-z0-9_]{4,32})$/); return m ? "https://t.me/" + m[1].replace(/\/+$/, "") : null; },
+  discord: v => { if (!v) return ""; const m = v.match(/^(?:https?:\/\/)?(?:www\.)?(discord\.gg\/[A-Za-z0-9-]+|discord\.com\/invite\/[A-Za-z0-9-]+)\/?$/i); return m ? "https://" + m[1] : null; },
+};
+
+/* ---------- boot ---------- */
+const cfg = ADMIN_CFG.supabase;
+if (!cfg.url || !cfg.anonKey || !window.supabase) { $("#v-off").hidden = false; return; }
+const sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+const st = { view: "requests", filter: "pending", requests: [], profiles: [], sel: null, edit: null, q: "" };
+
+function show(view) { for (const id of ["v-login", "v-noadmin", "v-app"]) $("#" + id).hidden = id !== view; }
+async function onSession(session) {
+  if (!session) { $("#who").hidden = true; show("v-login"); return; }
+  $("#who").hidden = false; $("#who-email").textContent = session.user?.email || "";
+  const { data: isAdmin, error } = await sb.rpc("is_admin");
+  if (error || !isAdmin) { show("v-noadmin"); return; }
+  show("v-app"); await loadAll();
+}
+// supabase-js can deadlock if another Supabase call runs inside this callback, so hand off first
+sb.auth.onAuthStateChange((event, session) => { if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "INITIAL_SESSION") setTimeout(() => onSession(session), 0); });
+
+$("#v-login").addEventListener("submit", async e => {
+  e.preventDefault();
+  const msg = $("#lg-msg"), email = $("#lg-email").value.trim(), password = $("#lg-pass").value;
+  if (!password) { msg.className = "msg bad"; msg.textContent = "Enter your password, or use the sign-in link."; return; }
+  msg.className = "msg"; msg.textContent = "Signing in…";
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { msg.className = "msg bad"; msg.textContent = error.message || "Couldn't sign in."; } else msg.textContent = "";
+});
+$("#lg-link").addEventListener("click", async () => {
+  const msg = $("#lg-msg"), email = $("#lg-email").value.trim();
+  if (!email) { msg.className = "msg bad"; msg.textContent = "Enter your email first."; return; }
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.href.split("#")[0] } });
+  msg.className = error ? "msg bad" : "msg ok";
+  msg.textContent = error ? (error.message || "Couldn't send the link.") : "Check your email for a sign-in link.";
+});
+$("#signout").addEventListener("click", () => sb.auth.signOut());
+
+/* ---------- data ---------- */
+async function loadAll() {
+  const [r, p] = await Promise.all([
+    sb.from("profile_requests").select("*").order("created_at", { ascending: false }).limit(1000),
+    sb.from("token_profiles").select("*").order("updated_at", { ascending: false }).limit(5000),
+  ]);
+  if (r.error || p.error) say("Couldn't load data: " + (r.error || p.error).message, "bad");
+  st.requests = r.data || []; st.profiles = p.data || [];
+  paintCounts(); paintList();
+  if (st.sel) { const again = findSel(); if (again) openEditor(st.sel.kind, again); else closeEditor(); }
+}
+const findSel = () => st.sel.kind === "request" ? st.requests.find(x => x.id === st.sel.id) : st.profiles.find(x => x.chain === st.sel.chain && x.address === st.sel.address);
+function paintCounts() {
+  const n = st.requests.filter(x => x.status === "pending").length;
+  $("#cnt-pending").textContent = n ? `(${n})` : "";
+  $("#cnt-profiles").textContent = st.profiles.length ? `(${st.profiles.length})` : "";
+}
+const tokCell = (o) => `<div class="tok">${safeUrl(o.icon_url) ? `<img src="${esc(o.icon_url)}" alt="">` : `<span class="ph"></span>`}<div><b>${esc(o.symbol || short(o.address))}</b><small>${esc(chainName(o.chain))} · ${esc(short(o.address))}</small></div></div>`;
+const payBadge = c => c ? `<span class="st ${esc(c.state)}">${c.state === "ok" ? "PAID" : c.state === "fail" ? "NOT PAID" : "CHECK"}</span>` : `<span class="st unknown">CHECK</span>`;
+function paintList() {
+  const t = $("#list");
+  $("#req-filter").hidden = st.view !== "requests"; $("#prof-tools").hidden = st.view !== "profiles";
+  if (st.view === "requests") {
+    const rows = st.requests.filter(x => st.filter === "all" || x.status === st.filter);
+    t.innerHTML = rows.length ? `<thead><tr><th>Received</th><th>Token</th><th>Paid with</th><th>Payment</th><th>Contact</th><th>Status</th></tr></thead><tbody>${rows.map(x => `
+      <tr data-id="${esc(x.id)}" class="${st.sel?.id === x.id ? "on" : ""}"><td>${fmtDate(Date.parse(x.created_at))}</td><td>${tokCell(x)}</td>
+      <td>${esc(PAY_METHODS[x.pay_method]?.label || x.pay_method)} <span class="note" style="display:inline">${esc(PAY_METHODS[x.pay_method]?.net || "")}</span></td>
+      <td>${payBadge(x.pay_check)}</td><td>${esc(x.contact)}</td><td><span class="st ${esc(x.status)}">${esc(x.status.toUpperCase())}</span></td></tr>`).join("")}</tbody>`
+      : `<tbody><tr><td class="empty">No ${st.filter === "all" ? "" : st.filter + " "}requests.</td></tr></tbody>`;
+  } else {
+    const q = st.q.toLowerCase();
+    const rows = st.profiles.filter(x => !q || (x.symbol || "").toLowerCase().includes(q) || (x.name || "").toLowerCase().includes(q) || x.address.toLowerCase().includes(q));
+    t.innerHTML = rows.length ? `<thead><tr><th>Token</th><th>Links</th><th>Banner</th><th>Updated</th></tr></thead><tbody>${rows.map(x => `
+      <tr data-chain="${esc(x.chain)}" data-address="${esc(x.address)}" class="${st.sel?.address === x.address && st.sel?.chain === x.chain ? "on" : ""}"><td>${tokCell(x)}</td>
+      <td>${[x.website, x.twitter, x.telegram, x.discord].filter(Boolean).length + (Array.isArray(x.links) ? x.links.length : 0)}</td><td>${x.banner_url ? "Yes" : "–"}</td><td>${fmtAgo(Date.parse(x.updated_at))}</td></tr>`).join("")}</tbody>`
+      : `<tbody><tr><td class="empty">${q ? "No profiles match." : "No token profiles yet."}</td></tr></tbody>`;
+  }
+}
+
+/* ---------- editor ---------- */
+const FIELDS = ["symbol", "name", "description", "website", "twitter", "telegram", "discord"];
+function closeEditor() { st.sel = null; st.edit = null; $("#editor").innerHTML = `<div class="empty">Pick a request or a profile to see it here.</div>`; paintList(); }
+function openEditor(kind, obj) {
+  const isNew = !obj;
+  obj = obj || { chain: "solana", address: "", links: [] };
+  st.sel = kind === "request" ? { kind, id: obj.id } : { kind, chain: obj.chain, address: obj.address, isNew };
+  st.edit = { icon: obj.icon_url || null, banner: obj.banner_url || null, iconFile: null, bannerFile: null, verify: null };
+  const links = Array.isArray(obj.links) ? obj.links : [];
+  const req = kind === "request" ? obj : null;
+  const pm = req ? PAY_METHODS[req.pay_method] : null;
+  const tl = req ? txLink(req.pay_method, req.pay_tx) : null, al = addrLink(obj.chain, obj.address);
+  const existing = req ? st.profiles.find(p => p.chain === req.chain && p.address === req.address) : null;
+  $("#editor").innerHTML = `
+    <div class="card-top"><h2>${kind === "request" ? "Request" : isNew ? "New token profile" : "Token profile"}</h2>${req ? `<span class="st ${esc(req.status)}">${esc(req.status.toUpperCase())}</span>` : ""}</div>
+    <form class="ed-body" id="ed-form" novalidate>
+      <div class="row2">
+        <div class="fld"><label for="ed-chain">Chain</label><select class="inp" id="ed-chain" ${isNew ? "" : "disabled"}>${Object.entries(CHAINS).map(([k, v]) => `<option value="${k}" ${k === obj.chain ? "selected" : ""}>${esc(v.name)}</option>`).join("")}</select></div>
+        <div class="fld"><label for="ed-address">Contract address</label><input class="inp" id="ed-address" value="${esc(obj.address)}" ${isNew ? "" : "readonly"} spellcheck="false"></div>
+      </div>
+      ${al ? `<p class="note"><a href="${esc(al)}" target="_blank" rel="noopener">Open in explorer ↗</a>${existing ? " · this token already has a live profile, approving replaces it" : ""}</p>` : ""}
+      <div class="row2">
+        <div class="fld"><label for="ed-symbol">Symbol</label><input class="inp" id="ed-symbol" maxlength="40" value="${esc(obj.symbol || "")}"></div>
+        <div class="fld"><label for="ed-name">Name</label><input class="inp" id="ed-name" maxlength="120" value="${esc(obj.name || "")}"></div>
+      </div>
+      <div class="fld"><label for="ed-description">Description</label><textarea class="inp" id="ed-description" maxlength="1000">${esc(obj.description || "")}</textarea></div>
+      <div class="row2">
+        <div class="fld"><label for="ed-website">Website</label><input class="inp" id="ed-website" value="${esc(obj.website || "")}"></div>
+        <div class="fld"><label for="ed-twitter">X</label><input class="inp" id="ed-twitter" value="${esc(obj.twitter || "")}"></div>
+        <div class="fld"><label for="ed-telegram">Telegram</label><input class="inp" id="ed-telegram" value="${esc(obj.telegram || "")}"></div>
+        <div class="fld"><label for="ed-discord">Discord</label><input class="inp" id="ed-discord" value="${esc(obj.discord || "")}"></div>
+      </div>
+      <div class="fld"><span class="lbl">Other links</span>
+        ${[0, 1].map(i => `<div class="row-l"><input class="inp" id="ed-l${i}-label" maxlength="24" placeholder="Label" value="${esc(links[i]?.label || "")}"><input class="inp" id="ed-l${i}-url" placeholder="https://" value="${esc(links[i]?.url || "")}"></div>`).join("")}
+      </div>
+      <div class="imgs">
+        <div class="fld"><span class="lbl">Logo</span><label class="imgbox icon" id="ed-icon-box"><input type="file" id="ed-icon" accept="image/png,image/jpeg,image/webp,image/gif">${imgHTML(obj.icon_url, "No logo · click to upload")}</label></div>
+        <div class="fld"><span class="lbl">Banner</span><label class="imgbox banner" id="ed-banner-box"><input type="file" id="ed-banner" accept="image/png,image/jpeg,image/webp,image/gif">${imgHTML(obj.banner_url, "No banner · click to upload")}</label></div>
+      </div>
+      <div class="inline"><button class="btn-b sm" type="button" data-clear="icon">Remove logo</button><button class="btn-b sm" type="button" data-clear="banner">Remove banner</button></div>
+      ${req ? `
+      <div class="sec"><h3>Payment</h3>
+        <dl class="kv">
+          <dt>Method</dt><dd>${esc(pm ? `${pm.label} on ${pm.net}` : req.pay_method)}</dd>
+          <dt>Transaction</dt><dd><code>${esc(short(req.pay_tx))}</code>${tl ? ` · <a href="${esc(tl)}" target="_blank" rel="noopener">explorer ↗</a>` : ""}</dd>
+          <dt>Submitter saw</dt><dd>${req.pay_check ? `${payBadge(req.pay_check)} ${req.pay_check.amount != null ? esc(payFmt(req.pay_check.amount, pm?.label || "")) : ""}${req.pay_check.usd != null ? ` ≈ $${Number(req.pay_check.usd).toFixed(2)}` : ""}` : "–"}</dd>
+          <dt>Check now</dt><dd id="ed-verify-out"><button class="btn-b sm" type="button" id="ed-verify">Verify on-chain</button></dd>
+        </dl>
+      </div>
+      <div class="sec"><h3>Request</h3>
+        <dl class="kv"><dt>Received</dt><dd>${fmtDate(Date.parse(req.created_at))}</dd><dt>Contact</dt><dd>${esc(req.contact)}</dd><dt>Reference</dt><dd><code>MD-${esc(req.id.slice(0, 8).toUpperCase())}</code></dd>${req.reviewed_at ? `<dt>Reviewed</dt><dd>${fmtDate(Date.parse(req.reviewed_at))}</dd>` : ""}</dl>
+        <div class="fld"><label for="ed-note">Admin note <span class="note" style="display:inline">(only admins see this)</span></label><textarea class="inp" id="ed-note" style="min-height:64px">${esc(req.admin_note || "")}</textarea></div>
+      </div>` : ""}
+      <p class="msg" id="ed-msg" role="status"></p>
+      <div class="actions">${req ? `
+        <button class="btn-a" type="button" id="ed-approve">${req.status === "approved" ? "Publish again" : "Approve & publish"}</button>
+        ${req.status !== "rejected" ? `<button class="btn-b" type="button" id="ed-reject">Reject</button>` : ""}
+        <button class="btn-d" type="button" id="ed-delete" data-confirm="Delete request?">Delete</button>` : `
+        <button class="btn-a" type="button" id="ed-save">${isNew ? "Create profile" : "Save changes"}</button>
+        ${isNew ? "" : `<button class="btn-d" type="button" id="ed-delete" data-confirm="Delete profile?">Delete profile</button>`}`}
+        <button class="btn-b" type="button" id="ed-close" style="margin-left:auto">Close</button>
+      </div>
+    </form>`;
+  for (const kind2 of ["icon", "banner"]) $("#ed-" + kind2).addEventListener("change", e => pickFile(kind2, e.target.files[0]));
+  paintList();
+}
+function imgHTML(url, empty) { return safeUrl(url) ? `<img src="${esc(url)}" alt="">` : `<span>${esc(empty)}</span>`; }
+function pickFile(kind, file) {
+  if (!file) return;
+  const msg = $("#ed-msg");
+  if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type) || file.size > (kind === "icon" ? 1 : 3) * 1048576) { msg.className = "msg bad"; msg.textContent = `${kind === "icon" ? "Logo" : "Banner"} must be PNG, JPG, WEBP or GIF, ${kind === "icon" ? "1" : "3"} MB max.`; return; }
+  st.edit[kind + "File"] = file;
+  const box = $(`#ed-${kind}-box`), input = box.querySelector("input");
+  box.innerHTML = ""; box.appendChild(input);
+  box.insertAdjacentHTML("beforeend", `<img src="${URL.createObjectURL(file)}" alt=""><span class="note">new, not saved yet</span>`);
+}
+function readForm() {
+  const val = id => $("#ed-" + id).value.trim();
+  const out = { errs: [] };
+  out.chain = $("#ed-chain").value; out.address = normAddr(val("address"));
+  if (!(out.chain === "solana" ? /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(out.address) : /^0x[0-9a-f]{40}$/.test(out.address))) out.errs.push("contract address");
+  for (const k of FIELDS) {
+    const v = val(k);
+    if (LINK_NORM[k]) { const n = LINK_NORM[k](v); if (n === null) out.errs.push(k); out[k] = n || null; } else out[k] = v || null;
+  }
+  out.links = [];
+  for (const i of [0, 1]) {
+    const label = val(`l${i}-label`), raw = val(`l${i}-url`);
+    if (!label && !raw) continue;
+    const url = LINK_NORM.website(raw);
+    if (!label || !url) out.errs.push(`link ${i + 1}`); else out.links.push({ label, url });
+  }
+  return out;
+}
+async function uploadImg(kind, f) {
+  const file = st.edit[kind + "File"];
+  if (!file) return st.edit[kind];
+  const ext = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" }[file.type] || "png";
+  const path = `profiles/${f.chain}/${f.address}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from("token-media").upload(path, file, { upsert: true, contentType: file.type });
+  if (error) throw new Error(`${kind === "icon" ? "Logo" : "Banner"} upload failed: ${error.message}`);
+  return sb.storage.from("token-media").getPublicUrl(path).data.publicUrl;
+}
+async function saveProfile(f, requestId) {
+  const icon_url = await uploadImg("icon", f), banner_url = await uploadImg("banner", f);
+  const row = { chain: f.chain, address: f.address, symbol: f.symbol, name: f.name, description: f.description, website: f.website, twitter: f.twitter, telegram: f.telegram, discord: f.discord, links: f.links, icon_url, banner_url, updated_at: new Date().toISOString() };
+  if (requestId) row.request_id = requestId;
+  const { error } = await sb.from("token_profiles").upsert(row, { onConflict: "chain,address" });
+  if (error) throw new Error("Saving the profile failed: " + error.message);
+}
+function busy(on) { for (const b of $$("#editor .actions button")) b.disabled = on; }
+function edMsg(t, cls) { const m = $("#ed-msg"); if (m) { m.className = "msg " + (cls || ""); m.textContent = t; } }
+async function act(fn, done) {
+  busy(true); edMsg("Working…");
+  try { await fn(); say(done, "ok"); await loadAll(); }
+  catch (e) { edMsg(e.message || "Something went wrong.", "bad"); }
+  finally { busy(false); }
+}
+
+$("#editor").addEventListener("click", async e => {
+  const id = e.target.id, sel = st.sel;
+  const clear = e.target.closest("[data-clear]");
+  if (clear) { const k = clear.dataset.clear; st.edit[k] = null; st.edit[k + "File"] = null; const box = $(`#ed-${k}-box`), input = box.querySelector("input"); input.value = ""; box.innerHTML = ""; box.appendChild(input); box.insertAdjacentHTML("beforeend", `<span>Removed · click to upload</span>`); return; }
+  if (id === "ed-close") return closeEditor();
+  const del = e.target.closest("[data-confirm]");
+  if (del && !del.classList.contains("armed")) { del.classList.add("armed"); del.dataset.label = del.textContent; del.textContent = "Click again to delete"; setTimeout(() => { if (del.isConnected) { del.classList.remove("armed"); del.textContent = del.dataset.label; } }, 4000); return; }
+  if (id === "ed-verify") {
+    const req = findSel(); const out = $("#ed-verify-out"); out.textContent = "Checking…";
+    const v = await verifyPayment(req.pay_method, req.pay_tx, ADMIN_CFG.pay.wallets, ADMIN_CFG.pay.usd, ADMIN_CFG.pay.minRatio);
+    const pm = PAY_METHODS[req.pay_method];
+    out.innerHTML = `<span class="st ${v.state}">${v.state === "ok" ? "PAID" : v.state === "fail" ? "NOT VALID" : "UNSURE"}</span> ${v.amount != null ? esc(payFmt(v.amount, pm.label)) : ""}${v.usd != null ? ` ≈ $${v.usd.toFixed(2)}` : ""}${v.time ? ` · paid ${fmtAgo(v.time)}` : ""}${v.from ? `<br><span class="note">from ${esc(short(v.from))}</span>` : ""}${v.reason ? `<br><span class="note">${esc(v.reason)}</span>` : ""}`;
+    return;
+  }
+  const note = () => $("#ed-note")?.value.trim() || null;
+  const reviewed = async status => {
+    const { data: { session } } = await sb.auth.getSession();
+    const { error } = await sb.from("profile_requests").update({ status, admin_note: note(), reviewed_at: new Date().toISOString(), reviewed_by: session?.user?.id || null }).eq("id", sel.id);
+    if (error) throw new Error("Updating the request failed: " + error.message);
+  };
+  if (id === "ed-approve") {
+    const f = readForm(); if (f.errs.length) return edMsg("Fix: " + f.errs.join(", "), "bad");
+    return act(async () => { await saveProfile(f, sel.id); await reviewed("approved"); }, "Approved. The token page shows the new info within a few minutes.");
+  }
+  if (id === "ed-reject") return act(() => reviewed("rejected"), "Request rejected.");
+  if (id === "ed-save") {
+    const f = readForm(); if (f.errs.length) return edMsg("Fix: " + f.errs.join(", "), "bad");
+    return act(async () => { await saveProfile(f); st.sel = { kind: "profile", chain: f.chain, address: f.address }; }, sel.isNew ? "Profile created." : "Profile saved.");
+  }
+  if (id === "ed-delete" && sel.kind === "request") {
+    const req = findSel();
+    return act(async () => {
+      const { error } = await sb.from("profile_requests").delete().eq("id", sel.id);
+      if (error) throw new Error("Deleting failed: " + error.message);
+      // uploaded images go too, unless an approved profile is using them
+      if (req.status !== "approved") await sb.storage.from("token-media").remove([req.icon_url, req.banner_url].filter(Boolean).map(u => u.split("/token-media/")[1]).filter(Boolean));
+      st.sel = null; closeEditor();
+    }, "Request deleted.");
+  }
+  if (id === "ed-delete" && sel.kind === "profile") {
+    return act(async () => {
+      const { error } = await sb.from("token_profiles").delete().eq("chain", sel.chain).eq("address", sel.address);
+      if (error) throw new Error("Deleting failed: " + error.message);
+      st.sel = null; closeEditor();
+    }, "Profile deleted. The token page goes back to normal within a few minutes.");
+  }
+});
+
+/* ---------- list events ---------- */
+$(".tabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-view]"); if (!b) return;
+  st.view = b.dataset.view; for (const x of $$(".tabs [data-view]")) x.setAttribute("aria-pressed", String(x === b));
+  closeEditor();
+});
+$("#req-filter").addEventListener("click", e => {
+  const b = e.target.closest("[data-st]"); if (!b) return;
+  st.filter = b.dataset.st; for (const x of $$("#req-filter [data-st]")) x.setAttribute("aria-pressed", String(x === b));
+  paintList();
+});
+$("#list").addEventListener("click", e => {
+  const tr = e.target.closest("tbody tr"); if (!tr) return;
+  if (tr.dataset.id) openEditor("request", st.requests.find(x => x.id === tr.dataset.id));
+  else if (tr.dataset.address) openEditor("profile", st.profiles.find(x => x.chain === tr.dataset.chain && x.address === tr.dataset.address));
+});
+$("#prof-q").addEventListener("input", e => { st.q = e.target.value.trim(); paintList(); });
+$("#prof-new").addEventListener("click", () => openEditor("profile", null));
+$("#reload").addEventListener("click", () => loadAll().then(() => say("Up to date.", "ok")));
+})();
+</script>
+</body>
+</html>

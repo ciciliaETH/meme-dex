@@ -15,6 +15,29 @@ Live meme coin screener in a single static page: prices, charts, on-chain trades
 - Updates on its own: prices every 15 seconds, swaps as they happen on supported pools
 - Fun mode: animal emoji cursor, a burst of animals on every click or tap, and a stream while you press and hold. The 🐾 button in the header turns it off (saved per visitor).
 
+## Token info updates (paid)
+
+Token teams can pay a one-time fee (default $99 in SOL, ETH or USDC) to add a logo, banner, description and official links to their token page. The flow:
+
+1. The team fills in **Update Token Info** on the site (`#/update`), pays to your wallet and pastes the transaction hash. The page checks the payment on-chain before it lets them submit.
+2. The request lands in Supabase as *pending*.
+3. An admin opens **`/admin.html`**, verifies the payment again, edits anything that needs fixing, and approves. The token page updates within a few minutes.
+
+Admins can also create, edit and delete token profiles directly.
+
+### Setup
+
+1. Create a free project at supabase.com.
+2. Open the SQL editor and run `supabase/schema.sql`. It creates the tables, the security rules and the `token-media` image bucket.
+3. Create your admin login under Authentication → Users → Add user, then make it an admin:
+   `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
+4. Copy the project URL and anon key (Project Settings → API) into `CFG.supabase` in `index.html` and `ADMIN_CFG.supabase` in `admin.html`.
+5. Put your receiving wallets in `CFG.pay.wallets` and `ADMIN_CFG.pay.wallets`: a Solana address, and an EVM address for Base and Ethereum. Change `usd` there to change the price.
+
+The anon key is meant to be public. Row Level Security in the database is what stops visitors from changing anything: they can only read approved profiles and submit pending requests.
+
+`src/pay-shared.js` holds the payment check used by both pages. After editing it, run `python3 src/build.py` to copy it into `index.html` and `admin.html`.
+
 ## Coin Grade
 
 The grade is based on how much of the supply the token creator's wallet still holds:
