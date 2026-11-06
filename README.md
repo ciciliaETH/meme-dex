@@ -23,7 +23,9 @@ Token teams can pay a one-time fee (default $99 in SOL, ETH or USDC) to add a lo
 2. The request lands in Supabase as *pending*.
 3. An admin opens **`/admin.html`**, verifies the payment again, edits anything that needs fixing, and approves. The token page updates within a few minutes.
 
-Admins can also create, edit and delete token profiles directly.
+Admins can also create, edit and delete token profiles directly. Pasting a contract address into a new profile fills in the chain, name, logo, banner and links from the token's public data (empty fields only).
+
+Tokens without a paid profile show a dashed "?" logo and no social links, unless they're trending or worth at least $1M (`CFG.freeInfo`).
 
 ### Setup
 

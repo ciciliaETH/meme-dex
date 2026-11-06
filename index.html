@@ -269,6 +269,10 @@ table { width: 100%; border-collapse: collapse; }
 .logo-fb { display: inline-grid; place-items: center; color: #fff; font: 700 12px var(--font-display); background: linear-gradient(135deg, hsl(var(--h, 320) 75% 58%), hsl(calc(var(--h, 320) + 50) 70% 36%)); }
 .logo-fb.xs { font-size: 7px; }
 .logo-fb.lg { font-size: 17px; }
+/* no token info yet: dashed square with a question mark */
+.logo-q { display: inline-grid; place-items: center; background: transparent; border: 1px dashed color-mix(in srgb, var(--fg) 30%, transparent); color: var(--dim); font: 700 14px var(--font-display); }
+.logo-q.xs { font-size: 9px; }
+.logo-q.lg { font-size: 18px; }
 .cbadge { position: absolute; right: -4px; bottom: -4px; width: 17px; height: 17px; background: var(--panel); box-shadow: 0 0 0 2px var(--panel); }
 .logo-wrap.lg { width: 48px; height: 48px; }
 .logo-wrap.lg .cbadge { width: 20px; height: 20px; }
@@ -905,6 +909,9 @@ const CFG = {
     support: "",                   // optional link shown after submitting, e.g. https://t.me/yourchannel
   },
   profilesMs: 300000,  // reload approved token info every 5 minutes
+  // Logos and links from public data only show for big or trending tokens. Smaller and new
+  // tokens get a "?" logo and no social links until their team buys token info.
+  freeInfo: { trending: true, minMcap: 1000000 },
   listEnrich: 60,     // how many top rows get graded and copy-checked
   // Blockchain nodes for the real-time on-chain feed on token pages (free, no key).
   // If you have your own RPC (Helius, QuickNode, Alchemy, etc.), put its URL here.
@@ -1414,7 +1421,8 @@ function judgeOriginal(row, pairs) {
   for (const p of pairs || []) {
     if (p?.chainId !== row.chain || (p.baseToken?.symbol || "").toLowerCase() !== sym) continue;
     const a = normAddr(p.baseToken.address);
-    const g = groups.get(a) || { address: a, name: p.baseToken.name, symbol: p.baseToken.symbol, firstAt: null, liq: 0, bestLiq: -1, pair: p.pairAddress, image: null };
+    const g = groups.get(a) || { address: a, name: p.baseToken.name, symbol: p.baseToken.symbol, firstAt: null, liq: 0, bestLiq: -1, pair: p.pairAddress, image: null, mcap: 0 };
+    g.mcap = Math.max(g.mcap || 0, num(p.marketCap) || num(p.fdv) || 0);
     const ca = num(p.pairCreatedAt);
     if (ca) g.firstAt = g.firstAt == null ? ca : Math.min(g.firstAt, ca);
     const l = num(p.liquidity?.usd) || 0;
@@ -1501,6 +1509,14 @@ const profiles = new Map();
 // the paid form needs both the database and somewhere to receive payments
 const upOn = () => !!SB() && Object.keys(PAY_METHODS).some(k => payWallet(CFG.pay.wallets, k));
 const profileOf = r => r?.base?.address ? profiles.get(tokKey(r.chain, r.base.address)) || null : null;
+const freeOK = new Set(); // once a token qualifies it stays that way this session, so it doesn't flicker around the line
+function hasFreeInfo(r) {
+  if (!r) return false;
+  if (r.key && freeOK.has(r.key)) return true;
+  const ok = (CFG.freeInfo.trending && !!r.key && lists.trending.includes(r.key)) || (r.mcap ?? r.fdv ?? 0) >= CFG.freeInfo.minMcap;
+  if (ok && r.key) freeOK.add(r.key);
+  return ok;
+}
 async function loadProfiles() {
   const s = SB(); if (!s) return;
   const next = new Map();
@@ -1523,7 +1539,9 @@ async function loadProfiles() {
 function logoHTML(r, size = "") {
   const sym = (r.base?.symbol || "?").replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "?";
   const h = hue(r.base?.address || sym);
-  const img = validImg(profileOf(r)?.icon_url) || r.image;
+  const paid = validImg(profileOf(r)?.icon_url);
+  if (!paid && !hasFreeInfo(r)) return `<span class="logo logo-q ${size}" title="No token info yet" aria-hidden="true">?</span>`;
+  const img = paid || r.image;
   if (img) return `<img class="logo ${size}" src="${esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-fb="${esc(sym)}" data-h="${h}">`;
   return `<span class="logo logo-fb ${size}" style="--h:${h}" aria-hidden="true">${esc(sym)}</span>`;
 }
@@ -2333,7 +2351,7 @@ function linkList(r) {
   const out = [];
   const ex = explorerLink(r.chain, r.base.address);
   if (ex) out.push(["Explorer", ex]);
-  if (profileOf(r)) return out.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("");
+  if (profileOf(r) || !hasFreeInfo(r)) return out.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("");
   for (const w of r.info?.websites || []) { const u = safeUrl(w?.url); if (u) out.push([w.label || "Website", u]); }
   for (const s of r.info?.socials || []) {
     const type = (s?.type || s?.platform || "").toLowerCase();
@@ -2445,7 +2463,7 @@ function paintOrigCard(res) {
   }[res.state];
   const peers = res.list.slice(0, 8).map(g => {
     const href = `#/t/${enc(r.chain)}/${enc(g.pair)}`;
-    return `<li class="${g.self ? "self" : ""}">${logoHTML({ base: { symbol: g.symbol, address: g.address }, image: g.image }, "xs")}
+    return `<li class="${g.self ? "self" : ""}">${g.self ? logoHTML(r, "xs") : logoHTML({ chain: r.chain, base: { symbol: g.symbol, address: g.address }, image: g.image, mcap: g.mcap }, "xs")}
       <span class="nm">${g.self ? `<b>${esc(g.name)}</b> <span>(this token)</span>` : `<a href="${href}">${esc(g.name)}</a>`} <span>${esc(short(g.address))}</span></span>
       <span class="mt">${fmtAge(g.firstAt)} · ${fmtUsd(g.liq)}</span></li>`;
   }).join("");

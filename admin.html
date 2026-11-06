@@ -406,7 +406,9 @@ function openEditor(kind, obj) {
         <div class="fld"><label for="ed-chain">Chain</label><select class="inp" id="ed-chain" ${isNew ? "" : "disabled"}>${Object.entries(CHAINS).map(([k, v]) => `<option value="${k}" ${k === obj.chain ? "selected" : ""}>${esc(v.name)}</option>`).join("")}</select></div>
         <div class="fld"><label for="ed-address">Contract address</label><input class="inp" id="ed-address" value="${esc(obj.address)}" ${isNew ? "" : "readonly"} spellcheck="false"></div>
       </div>
-      ${al ? `<p class="note"><a href="${esc(al)}" target="_blank" rel="noopener">Open in explorer ↗</a>${existing ? " · this token already has a live profile, approving replaces it" : ""}</p>` : ""}
+      <div class="inline"><button class="btn-b sm" type="button" id="ed-fill">Fill empty fields from token data</button>${al ? `<a class="note" href="${esc(al)}" target="_blank" rel="noopener">Open in explorer ↗</a>` : ""}</div>
+      ${isNew ? `<p class="note">Paste a contract address and the chain, name, logo, banner and links fill in on their own.</p>` : ""}
+      ${existing ? `<p class="note">This token already has a live profile. Approving replaces it.</p>` : ""}
       <div class="row2">
         <div class="fld"><label for="ed-symbol">Symbol</label><input class="inp" id="ed-symbol" maxlength="40" value="${esc(obj.symbol || "")}"></div>
         <div class="fld"><label for="ed-name">Name</label><input class="inp" id="ed-name" maxlength="120" value="${esc(obj.name || "")}"></div>
@@ -450,7 +452,54 @@ function openEditor(kind, obj) {
       </div>
     </form>`;
   for (const kind2 of ["icon", "banner"]) $("#ed-" + kind2).addEventListener("change", e => pickFile(kind2, e.target.files[0]));
+  if (isNew) {
+    let t = 0;
+    $("#ed-address").addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => autoFill(true), 500); });
+  }
   paintList();
+}
+// shows an image (or a placeholder) in a logo/banner box, keeping its file input
+function setBox(kind, src, note) {
+  const box = $(`#ed-${kind}-box`), input = box.querySelector("input");
+  box.innerHTML = ""; box.appendChild(input);
+  box.insertAdjacentHTML("beforeend", src ? `<img src="${esc(src)}" alt="">${note ? `<span class="note">${esc(note)}</span>` : ""}` : `<span>${esc(note)}</span>`);
+}
+/* Fills the empty fields from the token's public data: chain, symbol, name, links, logo and banner.
+   Never overwrites what the admin already typed or uploaded. */
+async function autoFill(quiet) {
+  const addr = $("#ed-address").value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(addr) && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr)) { if (!quiet) edMsg("Paste a valid contract address first.", "bad"); return; }
+  edMsg("Looking up the token…");
+  let p = null;
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(addr)}`, { signal: AbortSignal.timeout(12000) });
+    const pairs = ((await res.json()).pairs || []).filter(x => CHAINS[x.chainId] && normAddr(x.baseToken?.address) === normAddr(addr));
+    pairs.sort((a, b) => (Number(b.liquidity?.usd) || 0) - (Number(a.liquidity?.usd) || 0));
+    p = pairs.find(x => x.info) || pairs[0] || null;
+  } catch { edMsg("Couldn't look up the token right now. Fill it in by hand.", "bad"); return; }
+  if (!$("#ed-address") || $("#ed-address").value.trim() !== addr) return;
+  if (!p) { edMsg("No trading pair found for this address on a supported chain.", "warn"); return; }
+  const filled = [], info = p.info || {};
+  const chain = $("#ed-chain");
+  if (!chain.disabled && chain.value !== p.chainId) { chain.value = p.chainId; filled.push("chain"); }
+  const setIf = (id, v, label) => { const el = $("#ed-" + id); if (v && !el.value.trim()) { el.value = v; filled.push(label); } };
+  setIf("symbol", String(p.baseToken.symbol || "").slice(0, 40), "symbol");
+  setIf("name", String(p.baseToken.name || "").slice(0, 120), "name");
+  const sites = (info.websites || []).map(w => ({ label: w.label, url: LINK_NORM.website(String(w.url || "")) })).filter(w => w.url);
+  setIf("website", sites[0]?.url, "website");
+  const social = (type, norm) => { for (const x of info.socials || []) if (x.type === type) { const v = norm(String(x.url || "").trim()); if (v) return v; } return null; };
+  setIf("twitter", social("twitter", LINK_NORM.twitter), "X");
+  setIf("telegram", social("telegram", LINK_NORM.telegram), "Telegram");
+  setIf("discord", social("discord", LINK_NORM.discord), "Discord");
+  sites.slice(1, 3).forEach((w, i) => {
+    const l = $(`#ed-l${i}-label`), u = $(`#ed-l${i}-url`);
+    if (!l.value.trim() && !u.value.trim()) { l.value = String(w.label || "Link").slice(0, 24); u.value = w.url; filled.push(l.value); }
+  });
+  for (const [kind, url] of [["icon", info.imageUrl], ["banner", info.header]]) {
+    if (safeUrl(url) && !st.edit[kind] && !st.edit[kind + "File"]) { st.edit[kind] = url; setBox(kind, url, "from token data"); filled.push(kind === "icon" ? "logo" : "banner"); }
+  }
+  const where = `${p.baseToken.symbol} on ${chainName(p.chainId)}`;
+  edMsg(filled.length ? `Found ${where}. Filled: ${filled.join(", ")}. Check everything before saving.` : `Found ${where}. Nothing new to fill.`, "ok");
 }
 function imgHTML(url, empty) { return safeUrl(url) ? `<img src="${esc(url)}" alt="">` : `<span>${esc(empty)}</span>`; }
 function pickFile(kind, file) {
@@ -458,9 +507,7 @@ function pickFile(kind, file) {
   const msg = $("#ed-msg");
   if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type) || file.size > (kind === "icon" ? 1 : 3) * 1048576) { msg.className = "msg bad"; msg.textContent = `${kind === "icon" ? "Logo" : "Banner"} must be PNG, JPG, WEBP or GIF, ${kind === "icon" ? "1" : "3"} MB max.`; return; }
   st.edit[kind + "File"] = file;
-  const box = $(`#ed-${kind}-box`), input = box.querySelector("input");
-  box.innerHTML = ""; box.appendChild(input);
-  box.insertAdjacentHTML("beforeend", `<img src="${URL.createObjectURL(file)}" alt=""><span class="note">new, not saved yet</span>`);
+  setBox(kind, URL.createObjectURL(file), "new, not saved yet");
 }
 function readForm() {
   const val = id => $("#ed-" + id).value.trim();
@@ -508,8 +555,9 @@ async function act(fn, done) {
 $("#editor").addEventListener("click", async e => {
   const id = e.target.id, sel = st.sel;
   const clear = e.target.closest("[data-clear]");
-  if (clear) { const k = clear.dataset.clear; st.edit[k] = null; st.edit[k + "File"] = null; const box = $(`#ed-${k}-box`), input = box.querySelector("input"); input.value = ""; box.innerHTML = ""; box.appendChild(input); box.insertAdjacentHTML("beforeend", `<span>Removed · click to upload</span>`); return; }
+  if (clear) { const k = clear.dataset.clear; st.edit[k] = null; st.edit[k + "File"] = null; $(`#ed-${k}`).value = ""; setBox(k, null, "Removed · click to upload"); return; }
   if (id === "ed-close") return closeEditor();
+  if (id === "ed-fill") return autoFill(false);
   const del = e.target.closest("[data-confirm]");
   if (del && !del.classList.contains("armed")) { del.classList.add("armed"); del.dataset.label = del.textContent; del.textContent = "Click again to delete"; setTimeout(() => { if (del.isConnected) { del.classList.remove("armed"); del.textContent = del.dataset.label; } }, 4000); return; }
   if (id === "ed-verify") {
