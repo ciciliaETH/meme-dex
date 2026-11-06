@@ -72,6 +72,7 @@ textarea.inp { height: auto; min-height: 92px; padding: 9px 11px; resize: vertic
 .tabs button, .pill { height: 34px; padding: 0 14px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); font-weight: 800; cursor: pointer; }
 .tabs button[aria-pressed="true"], .pill[aria-pressed="true"] { color: #fff; border-color: rgba(255, 150, 200, .55); background: linear-gradient(180deg, var(--btn-hi), var(--btn-mid) 55%, var(--btn-lo)); }
 .tabs .cnt { margin-left: 6px; font-size: 11px; opacity: .85; }
+.view-help { margin: -4px 0 14px; max-width: 80ch; line-height: 1.5; }
 .pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .pill { height: 30px; font-size: 12px; padding: 0 11px; }
 .desk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 520px); gap: 12px; align-items: start; }
@@ -141,6 +142,7 @@ code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
       <button type="button" data-view="profiles" aria-pressed="false">Token profiles<span class="cnt" id="cnt-profiles"></span></button>
       <span class="note" id="app-msg" role="status" style="margin-left:auto"></span>
     </div>
+    <p class="note view-help" id="view-help"></p>
 
     <div class="desk">
       <section class="panel" id="list-panel">
@@ -167,7 +169,7 @@ code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 /* ---------- settings (keep in sync with CFG.supabase and CFG.pay in index.html) ---------- */
 const ADMIN_CFG = {
   supabase: { url: "https://anophmvsnrhxngomhqav.supabase.co", anonKey: "sb_publishable_UV828yUu15HL8P3aBiAWlw_c-mDZKRs" },
-  pay: { usd: 99, minRatio: 0.97, wallets: { solana: "", evm: "" } },
+  pay: { usd: 99, minRatio: 0.97, wallets: { solana: "GrxPQcRA9rzwJpaKq1RmNirhoFysTpZ8fnxWhF5aBQFM", evm: "0xc7F8E0fb5B15BBA4899843fE10728Fc16EB04BcD" } },
 };
 const CHAINS = {
   solana:    { name: "Solana",    explorer: "https://solscan.io",                    addr: "/account/" },
@@ -366,8 +368,13 @@ function paintCounts() {
 }
 const tokCell = (o) => `<div class="tok">${safeUrl(o.icon_url) ? `<img src="${esc(o.icon_url)}" alt="">` : `<span class="ph"></span>`}<div><b>${esc(o.symbol || short(o.address))}</b><small>${esc(chainName(o.chain))} · ${esc(short(o.address))}</small></div></div>`;
 const payBadge = c => c ? `<span class="st ${esc(c.state)}">${c.state === "ok" ? "PAID" : c.state === "fail" ? "NOT PAID" : "CHECK"}</span>` : `<span class="st unknown">CHECK</span>`;
+const HELP = {
+  requests: "Submissions from token teams who paid for token info. Check the payment, fix anything that needs it, then approve to put it live or reject it.",
+  profiles: "Token info that's live on MemeDex right now: logo, banner, description and links. Approving a request adds one here. You can also add, edit or remove one yourself, for example for a partner token.",
+};
 function paintList() {
   const t = $("#list");
+  $("#view-help").textContent = HELP[st.view];
   $("#req-filter").hidden = st.view !== "requests"; $("#prof-tools").hidden = st.view !== "profiles";
   if (st.view === "requests") {
     const rows = st.requests.filter(x => st.filter === "all" || x.status === st.filter);
