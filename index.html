@@ -343,7 +343,8 @@ table { width: 100%; border-collapse: collapse; }
 .desk { display: grid; gap: 12px; align-items: start; grid-template-columns: minmax(0, 1fr) 340px; }
 .col { display: grid; gap: 12px; min-width: 0; }
 @media (max-width: 960px) {
-  .desk { display: flex; flex-direction: column; }
+  .desk { display: flex; flex-direction: column; align-items: stretch; }
+  .desk .panel { min-width: 0; }
   .col { display: contents; }
   #chart-card { order: 1; } #grade-card { order: 2; } #orig-card { order: 3; }
   #stats-card { order: 4; } #trades-card { order: 5; } #sec-card { order: 6; }
@@ -374,7 +375,7 @@ table { width: 100%; border-collapse: collapse; }
 .trades a:hover { color: var(--accent); }
 .trades .val { position: relative; }
 .trades .val span { position: relative; }
-.trades .val i { position: absolute; right: 0; top: 7px; bottom: 7px; width: var(--w, 0%); max-width: 100%; border-radius: 4px; opacity: .14; background: currentColor; }
+.trades .val i { position: absolute; right: 8px; top: 7px; bottom: 7px; width: var(--w, 0%); max-width: calc(100% - 16px); opacity: .16; background: currentColor; }
 .trades tr.new td { animation: slidein .6s ease-out; }
 @keyframes slidein { from { opacity: 0; transform: translateY(-6px); background: var(--accent-soft); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .trades tr.new td { animation: none; } }
@@ -458,6 +459,7 @@ details.crit summary { cursor: pointer; color: var(--muted); font-size: 12px; fo
 .soc a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .soc a:hover { border-color: var(--accent); color: var(--accent); }
 .info-meta { margin-top: 12px !important; }
+.info-meta a { color: var(--accent); font-weight: 700; white-space: nowrap; }
 .cta-in { display: grid; gap: 10px; padding: 16px; }
 .cta-in h2 { font: 700 14px var(--font-display); margin: 0; }
 .cta-in p { margin: 0; color: var(--muted); font-size: 12.5px; font-weight: 500; }
@@ -2400,7 +2402,7 @@ function paintInfoCard(r) {
     info.innerHTML = `<div class="card-top"><h2>Token info</h2>${upd ? `<span class="note">updated ${fmtAgo(upd)}</span>` : ""}</div><div class="card-body">
       ${p.description ? `<p class="info-desc">${esc(p.description)}</p>` : ""}
       ${socHTML(profileLinks(p))}
-      <p class="note info-meta">Provided by the token team and checked by MemeDex. Always double-check links before connecting a wallet.</p>
+      <p class="note info-meta">Provided by the token team and checked by MemeDex. Always double-check links before connecting a wallet.${upOn() ? ` <a href="#/update/${enc(r.chain)}/${enc(r.base.address)}">Update this info</a>` : ""}</p>
     </div>`;
     info.hidden = false; cta.hidden = true;
   } else {
