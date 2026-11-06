@@ -129,7 +129,7 @@ code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
     <p>Only accounts listed as MemeDex admins can open this panel.</p>
     <div class="fld"><label for="lg-email">Email</label><input class="inp" id="lg-email" type="email" autocomplete="username" required></div>
     <div class="fld"><label for="lg-pass">Password</label><input class="inp" id="lg-pass" type="password" autocomplete="current-password"></div>
-    <div class="inline"><button class="btn-a" type="submit">Sign in</button><button class="btn-b" type="button" id="lg-link">Email me a sign-in link</button></div>
+    <button class="btn-a" type="submit">Sign in</button>
     <p class="msg" id="lg-msg" role="status"></p>
   </form>
 
@@ -340,17 +340,10 @@ sb.auth.onAuthStateChange((event, session) => { if (event === "SIGNED_IN" || eve
 $("#v-login").addEventListener("submit", async e => {
   e.preventDefault();
   const msg = $("#lg-msg"), email = $("#lg-email").value.trim(), password = $("#lg-pass").value;
-  if (!password) { msg.className = "msg bad"; msg.textContent = "Enter your password, or use the sign-in link."; return; }
+  if (!email || !password) { msg.className = "msg bad"; msg.textContent = "Enter your email and password."; return; }
   msg.className = "msg"; msg.textContent = "Signing in…";
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { msg.className = "msg bad"; msg.textContent = error.message || "Couldn't sign in."; } else msg.textContent = "";
-});
-$("#lg-link").addEventListener("click", async () => {
-  const msg = $("#lg-msg"), email = $("#lg-email").value.trim();
-  if (!email) { msg.className = "msg bad"; msg.textContent = "Enter your email first."; return; }
-  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.href.split("#")[0] } });
-  msg.className = error ? "msg bad" : "msg ok";
-  msg.textContent = error ? (error.message || "Couldn't send the link.") : "Check your email for a sign-in link.";
 });
 $("#signout").addEventListener("click", () => sb.auth.signOut());
 
