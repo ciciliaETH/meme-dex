@@ -325,26 +325,38 @@ table { width: 100%; border-collapse: collapse; }
 /* ---------- token desk ---------- */
 .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; margin-bottom: 14px; font-weight: 700; font-size: 12.5px; }
 .back:hover { color: var(--accent); }
-.d-head { display: flex; align-items: center; gap: 14px 0; flex-wrap: wrap; padding: 14px 18px; margin-bottom: 12px; }
+/* token header: a fixed grid, so changing numbers never push a stat onto a new line.
+   The layout follows the width of the token area (container query), not the window. */
+#detail-view { container: desk / inline-size; }
+.d-head { display: grid; grid-template-columns: minmax(0, 1fr) 240px minmax(0, 1.75fr); align-items: center; gap: 14px 0; padding: 14px 18px; margin-bottom: 12px; }
 .d-id { display: flex; gap: 12px; align-items: center; min-width: 0; padding-right: 22px; }
-.d-id h1 { font: 700 17px/1.15 var(--font-display); margin: 0; overflow-wrap: anywhere; }
-.d-id h1 small { display: block; font: 600 12px var(--font-body); color: var(--muted); margin-top: 2px; }
-.d-price { padding: 0 22px; border-left: 1px solid var(--line); }
-.d-price .p { font: 700 clamp(22px, 2.6vw, 28px)/1.05 var(--font-display); letter-spacing: -.01em; }
-.d-price .pn { color: var(--dim); font-size: 11.5px; margin-top: 3px; font-weight: 600; }
-.stat { padding: 0 22px; border-left: 1px solid var(--line); display: grid; gap: 3px; }
-.stat b { font-size: 14px; font-weight: 700; }
-.stat span { color: var(--dim); font-size: 11.5px; font-weight: 600; }
+.d-id > div { min-width: 0; }
+.d-id h1 { font: 700 17px/1.15 var(--font-display); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-id h1 small { display: block; font: 600 12px var(--font-body); color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-price { padding: 0 22px; border-left: 1px solid var(--line); min-width: 0; }
+.d-price .p { font: 700 26px/1.05 var(--font-display); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-price .pn { color: var(--dim); font-size: 11.5px; margin-top: 3px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); min-width: 0; }
+.stat { padding: 0 16px; border-left: 1px solid var(--line); display: grid; gap: 3px; min-width: 0; }
+.stat b { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat span { color: var(--dim); font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .d-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
-.chips-head { display: flex; gap: 5px; flex-wrap: wrap; flex-basis: 100%; padding-top: 12px; margin-top: 2px; border-top: 1px solid var(--line); }
+.chips-head { grid-column: 1 / -1; display: flex; gap: 5px; flex-wrap: wrap; padding-top: 12px; margin-top: 2px; border-top: 1px solid var(--line); }
 .chips-head .ch { font-size: 11.5px; padding: 5px 9px; }
 .badge { font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: var(--panel-3); color: var(--muted); }
-@media (max-width: 1100px) { .stat.opt { display: none; } }
-@media (max-width: 720px) {
-  .d-head { padding: 14px; }
-  .d-id { flex-basis: 100%; padding-right: 0; }
-  .d-price { flex-basis: 100%; border-left: 0; padding: 0; }
-  .stat { padding: 0 14px 0 0; border-left: 0; }
+/* medium: name | price on top, the five stats in equal columns underneath */
+@container desk (max-width: 1179px) {
+  .d-head { grid-template-columns: minmax(0, 1fr) 240px; }
+  .d-stats { grid-column: 1 / -1; padding-top: 12px; border-top: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+}
+/* narrow: everything stacked, stats three to a row */
+@container desk (max-width: 639px) {
+  .d-head { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .d-id { padding-right: 0; }
+  .d-price { border-left: 0; padding: 0; }
+  .d-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 12px; }
+  .stat { border-left: 0; padding: 0 10px 0 0; }
 }
 .livechip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: var(--panel-3); color: var(--muted); }
 .livechip .dot { width: 6px; height: 6px; }
@@ -465,6 +477,7 @@ details.crit summary { cursor: pointer; color: var(--muted); font-size: 12px; fo
 #sec-card .stats { padding: 14px 0 0; }
 
 /* ---------- share ---------- */
+.chips-head .share-btn { margin-left: auto; }
 .share-btn { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; cursor: pointer; font: 800 11px var(--font-body); letter-spacing: .04em; text-transform: uppercase; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line-2); }
 .share-btn svg { width: 13px; height: 13px; }
 .share-btn:hover, .share-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
@@ -1933,7 +1946,7 @@ function ensureChart() {
   const up = cssVar("--up"), down = cssVar("--down");
   candles = chart.addCandlestickSeries({
     upColor: up, downColor: down, wickUpColor: up, wickDownColor: down, borderVisible: false,
-    priceFormat: { type: "custom", minMove: 1e-12, formatter: p => fmtPrice(p, true) },
+    priceFormat: { type: "custom", minMove: 1e-12, formatter: p => p < 0 ? "" : fmtPrice(p, true) },
   });
   candles.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.26 } });
   vols = chart.addHistogramSeries({ priceFormat: { type: "volume" }, priceScaleId: "vol", lastValueVisible: false, priceLineVisible: false });
@@ -2366,14 +2379,16 @@ function gradeChipHTML(r) {
 function paintHead(r) {
   const h24 = r.change?.h24, h1 = r.change?.h1;
   $("#d-head").innerHTML = `
-    <div class="d-id">${starHTML(r)}${logoWrapHTML(r, "lg")}<div style="min-width:0"><h1>${esc(r.base.symbol || "?")}/${esc(r.quote?.symbol || "")}<small>${esc(r.base.name || "")} · ${chainIconHTML(r.chain, "in")}${esc(chainName(r.chain))}${r.dexId ? " · " + esc(r.dexId) : ""}</small></h1><div class="d-badges">${gradeChipHTML(r)}${liveChipHTML()}<button type="button" class="share-btn" data-share aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v8h14v-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></svg>Share</button></div></div></div>
+    <div class="d-id">${starHTML(r)}${logoWrapHTML(r, "lg")}<div style="min-width:0"><h1>${esc(r.base.symbol || "?")}/${esc(r.quote?.symbol || "")}<small>${esc(r.base.name || "")} · ${chainIconHTML(r.chain, "in")}${esc(chainName(r.chain))}${r.dexId ? " · " + esc(r.dexId) : ""}</small></h1><div class="d-badges">${gradeChipHTML(r)}${liveChipHTML()}</div></div></div>
     <div class="d-price"><div class="p">${fmtPrice(r.priceUsd)}</div>${r.priceNative ? `<div class="pn">${fmtPrice(r.priceNative, true)} ${esc(r.quote?.symbol || "")}</div>` : ""}</div>
-    <div class="stat"><b class="${pctCls(h24)}">${fmtPct(h24)}</b><span>24h change</span></div>
-    <div class="stat"><b class="${pctCls(h1)}">${fmtPct(h1)}</b><span>1h change</span></div>
-    <div class="stat opt"><b>${fmtUsd(r.liquidity)}</b><span>Liquidity</span></div>
-    <div class="stat opt"><b>${fmtUsd(r.mcap ?? r.fdv)}</b><span>Market cap</span></div>
-    <div class="stat opt"><b>${fmtUsd(r.volume?.h24)}</b><span>24h volume</span></div>
-    <div class="chips-head">${riskChips(r)}</div>`;
+    <div class="d-stats">
+      <div class="stat"><b class="${pctCls(h24)}">${fmtPct(h24)}</b><span>24h change</span></div>
+      <div class="stat"><b class="${pctCls(h1)}">${fmtPct(h1)}</b><span>1h change</span></div>
+      <div class="stat"><b>${fmtUsd(r.liquidity)}</b><span>Liquidity</span></div>
+      <div class="stat"><b>${fmtUsd(r.mcap ?? r.fdv)}</b><span>Market cap</span></div>
+      <div class="stat"><b>${fmtUsd(r.volume?.h24)}</b><span>24h volume</span></div>
+    </div>
+    <div class="chips-head">${riskChips(r)}<button type="button" class="share-btn" data-share aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v8h14v-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></svg>Share</button></div>`;
 }
 function linkList(r) {
   const out = [];
