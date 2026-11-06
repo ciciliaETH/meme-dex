@@ -166,7 +166,7 @@ code { font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
 "use strict";
 /* ---------- settings (keep in sync with CFG.supabase and CFG.pay in index.html) ---------- */
 const ADMIN_CFG = {
-  supabase: { url: "", anonKey: "" },
+  supabase: { url: "https://anophmvsnrhxngomhqav.supabase.co", anonKey: "sb_publishable_UV828yUu15HL8P3aBiAWlw_c-mDZKRs" },
   pay: { usd: 99, minRatio: 0.97, wallets: { solana: "", evm: "" } },
 };
 const CHAINS = {
@@ -329,8 +329,9 @@ function show(view) { for (const id of ["v-login", "v-noadmin", "v-app"]) $("#" 
 async function onSession(session) {
   if (!session) { $("#who").hidden = true; show("v-login"); return; }
   $("#who").hidden = false; $("#who-email").textContent = session.user?.email || "";
-  const { data: isAdmin, error } = await sb.rpc("is_admin");
-  if (error || !isAdmin) { show("v-noadmin"); return; }
+  // the admins table only shows a signed-in user their own row, so a row back means "admin"
+  const { data: me, error } = await sb.from("admins").select("user_id").eq("user_id", session.user.id).limit(1);
+  if (error || !me?.length) { show("v-noadmin"); return; }
   show("v-app"); await loadAll();
 }
 // supabase-js can deadlock if another Supabase call runs inside this callback, so hand off first

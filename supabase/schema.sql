@@ -6,19 +6,22 @@
 --   admins               everything: review requests, create/edit/delete profiles and images
 -- An admin is any login listed in public.admins.
 
-create extension if not exists pgcrypto;
-
 -- ---------- admins ----------
 create table if not exists public.admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
   created_at timestamptz not null default now()
 );
 
-create or replace function public.is_admin() returns boolean
-language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.admins where user_id = auth.uid());
+-- the admin check lives in a schema the public API doesn't expose
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+create or replace function private.is_admin() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.admins where user_id = (select auth.uid()));
 $$;
-grant execute on function public.is_admin() to anon, authenticated;
+revoke all on function private.is_admin() from public, anon;
+grant execute on function private.is_admin() to authenticated;
 
 -- ---------- approved profiles (what the site shows) ----------
 create table if not exists public.token_profiles (
@@ -72,17 +75,19 @@ alter table public.admins           enable row level security;
 alter table public.token_profiles   enable row level security;
 alter table public.profile_requests enable row level security;
 
+-- each signed-in user sees only their own admin row (the admin panel uses this to check access)
 drop policy if exists "admins read admins" on public.admins;
-create policy "admins read admins" on public.admins for select using (public.is_admin());
+drop policy if exists "users read own admin row" on public.admins;
+create policy "users read own admin row" on public.admins for select to authenticated using (user_id = (select auth.uid()));
 
 drop policy if exists "public read profiles"   on public.token_profiles;
 drop policy if exists "admins insert profiles" on public.token_profiles;
 drop policy if exists "admins update profiles" on public.token_profiles;
 drop policy if exists "admins delete profiles" on public.token_profiles;
 create policy "public read profiles"   on public.token_profiles for select using (true);
-create policy "admins insert profiles" on public.token_profiles for insert with check (public.is_admin());
-create policy "admins update profiles" on public.token_profiles for update using (public.is_admin()) with check (public.is_admin());
-create policy "admins delete profiles" on public.token_profiles for delete using (public.is_admin());
+create policy "admins insert profiles" on public.token_profiles for insert to authenticated with check ((select private.is_admin()));
+create policy "admins update profiles" on public.token_profiles for update to authenticated using ((select private.is_admin())) with check ((select private.is_admin()));
+create policy "admins delete profiles" on public.token_profiles for delete to authenticated using ((select private.is_admin()));
 
 drop policy if exists "anyone submits requests" on public.profile_requests;
 drop policy if exists "admins read requests"    on public.profile_requests;
@@ -90,9 +95,9 @@ drop policy if exists "admins update requests"  on public.profile_requests;
 drop policy if exists "admins delete requests"  on public.profile_requests;
 create policy "anyone submits requests" on public.profile_requests for insert to anon, authenticated
   with check (status = 'pending' and admin_note is null and reviewed_at is null and reviewed_by is null);
-create policy "admins read requests"   on public.profile_requests for select using (public.is_admin());
-create policy "admins update requests" on public.profile_requests for update using (public.is_admin()) with check (public.is_admin());
-create policy "admins delete requests" on public.profile_requests for delete using (public.is_admin());
+create policy "admins read requests"   on public.profile_requests for select to authenticated using ((select private.is_admin()));
+create policy "admins update requests" on public.profile_requests for update to authenticated using ((select private.is_admin())) with check ((select private.is_admin()));
+create policy "admins delete requests" on public.profile_requests for delete to authenticated using ((select private.is_admin()));
 
 grant select on public.token_profiles to anon, authenticated;
 grant insert on public.profile_requests to anon, authenticated;
@@ -110,8 +115,8 @@ drop policy if exists "admins manage media"          on storage.objects;
 create policy "anyone uploads request media" on storage.objects for insert to anon, authenticated
   with check (bucket_id = 'token-media' and (storage.foldername(name))[1] = 'requests');
 create policy "admins manage media" on storage.objects for all to authenticated
-  using (bucket_id = 'token-media' and public.is_admin())
-  with check (bucket_id = 'token-media' and public.is_admin());
+  using (bucket_id = 'token-media' and (select private.is_admin()))
+  with check (bucket_id = 'token-media' and (select private.is_admin()));
 
 -- ---------- make someone an admin (after they have a login) ----------
 -- insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';

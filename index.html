@@ -186,9 +186,6 @@ html.fx-on :is(a, img) { -webkit-touch-callout: none; }
 }
 
 /* notices */
-.notices { display: grid; gap: 8px; margin-top: 14px; }
-.notices:empty { display: none; }
-.notice { padding: 10px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line-2); border-left: 3px solid var(--warn); font-size: 13px; }
 
 /* ---------- list ---------- */
 main { padding-block: 16px 48px; }
@@ -685,7 +682,6 @@ footer { display: none; }
     </div>
 
     <main class="shell">
-      <div id="notices" class="notices" aria-live="polite"></div>
 
       <section id="list-view">
         <div class="toolbar">
@@ -901,7 +897,7 @@ const CFG = {
     maxOnScreen: 90,
   },
   // Paid "Update token info": fill in the Supabase project and your wallets to switch it on.
-  supabase: { url: "", anonKey: "" },
+  supabase: { url: "https://anophmvsnrhxngomhqav.supabase.co", anonKey: "sb_publishable_UV828yUu15HL8P3aBiAWlw_c-mDZKRs" },
   pay: {
     usd: 99,                       // fee in US dollars
     minRatio: 0.97,                // accept payments worth at least 97% of the fee (prices move)
@@ -1043,16 +1039,8 @@ function fmtAgo(ts) {
 }
 const txCount = r => { const t = r.txns?.h24; return t ? (num(t.buys) || 0) + (num(t.sells) || 0) : null; };
 
-/* ---------- notices ---------- */
-const notices = new Map();
-function notify(label, kind) {
-  const msg = kind === "rate"
-    ? "Data servers are busy. Retrying automatically in a moment."
-    : "Some data failed to load. Check your connection and reload the page.";
-  notices.set(label, msg); paintNotices();
-}
-function clearNotice(label) { if (notices.delete(label)) paintNotices(); }
-function paintNotices() { $("#notices").innerHTML = [...new Set(notices.values())].map(m => `<div class="notice">${esc(m)}</div>`).join(""); }
+/* Hiccups stay quiet: failed requests retry on their own, the live chip turns "Delayed" or
+   "Disconnected" if prices stop updating, and the table explains it only when nothing loads at all. */
 
 /* ---------- network: rate-limited queues + cache ---------- */
 function limiter(gapMs, concurrency = 1) {
@@ -1087,15 +1075,17 @@ async function fetchJSON(url, timeout = 15000) {
 }
 function getJSON(url, lim, label, priority) {
   return lim(async () => {
-    try {
-      const v = await fetchJSON(url); clearNotice(label); state.netBlocked = false; return v;
-    } catch (e) {
-      if (e.status === 429) { lim.pause(30000); notify(label, "rate"); throw e; }
-      if (!e.status && CFG.proxy) {
-        const v = await fetchJSON(CFG.proxy + encodeURIComponent(url)); clearNotice(label); return v;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const v = await fetchJSON(url); state.netBlocked = false; return v;
+      } catch (e) {
+        if (e.status === 429) { lim.pause(30000); throw e; }
+        if (!e.status && CFG.proxy) { try { return await fetchJSON(CFG.proxy + encodeURIComponent(url)); } catch { /* fall through */ } }
+        // no status = timeout, dropped connection, or a busy server answering without CORS headers
+        if ((!e.status || e.status >= 500) && attempt === 0) { await sleep(1500); continue; }
+        if (!e.status) { lim.pause(8000); state.netBlocked = true; }
+        throw e;
       }
-      if (!e.status) { notify(label, "blocked"); state.netBlocked = true; }
-      throw e;
     }
   }, priority);
 }
@@ -1505,8 +1495,11 @@ function sortedRows(filtered = true) {
 
 /* ---------- token info bought by token teams (stored in Supabase) ---------- */
 const SB = () => CFG.supabase.url && CFG.supabase.anonKey ? { url: CFG.supabase.url.replace(/\/+$/, ""), key: CFG.supabase.anonKey } : null;
-const sbHeaders = (extra = {}) => { const s = SB(); return { apikey: s.key, Authorization: "Bearer " + s.key, ...extra }; };
+// new sb_publishable_ keys go in the apikey header only; legacy anon JWTs also go in Authorization
+const sbHeaders = (extra = {}) => { const s = SB(); return { apikey: s.key, ...(s.key.startsWith("sb_") ? {} : { Authorization: "Bearer " + s.key }), ...extra }; };
 const profiles = new Map();
+// the paid form needs both the database and somewhere to receive payments
+const upOn = () => !!SB() && Object.keys(PAY_METHODS).some(k => payWallet(CFG.pay.wallets, k));
 const profileOf = r => r?.base?.address ? profiles.get(tokKey(r.chain, r.base.address)) || null : null;
 async function loadProfiles() {
   const s = SB(); if (!s) return;
@@ -1819,6 +1812,7 @@ async function loadFeeds(force) {
   if (merged.size || !sameChain) lists.all = [...merged];
   state.loaded = true; state.listChain = chain;
   state.failed = !lists.all.length && !tr && !fr && !ds;
+  if (ds?.length) { state.lastLive = Date.now(); paintLive(); }
   renderTicker();
   if (state.view === "list") renderList();
   liveTick();
@@ -2393,7 +2387,7 @@ function paintInfoCard(r) {
     info.hidden = false; cta.hidden = true;
   } else {
     info.hidden = true; info.innerHTML = "";
-    if (r && SB()) {
+    if (r && upOn()) {
       cta.innerHTML = `<div class="cta-in"><h2>Is this your token?</h2><p>Add a logo, banner, description and official links to this page. One-time fee of $${CFG.pay.usd}.</p><a class="btn-a" href="#/update/${enc(r.chain)}/${enc(r.base.address)}">Update token info</a></div>`;
       cta.hidden = false;
     } else cta.hidden = true;
@@ -2888,7 +2882,9 @@ function readLinks() {
 function initUpdateForm() {
   if (up.ready) return; up.ready = true;
   $("#up-chains").innerHTML = Object.entries(CHAINS).map(([k, v]) => `<button class="pill" type="button" data-upchain="${k}" aria-pressed="false" title="${esc(v.name)}">${chainIconHTML(k)}${esc(v.short)}</button>`).join("");
-  $("#up-pay").innerHTML = Object.entries(PAY_METHODS).map(([k, m]) => `<button type="button" data-paym="${k}" aria-pressed="false">${chainIconHTML(m.chain)}<span>${m.label}<small>${m.net}</small></span></button>`).join("");
+  const methods = Object.entries(PAY_METHODS).filter(([k]) => payWallet(CFG.pay.wallets, k));
+  if (!methods.some(([k]) => k === up.method)) up.method = methods[0][0];
+  $("#up-pay").innerHTML = methods.map(([k, m]) => `<button type="button" data-paym="${k}" aria-pressed="false">${chainIconHTML(m.chain)}<span>${m.label}<small>${m.net}</small></span></button>`).join("");
   for (const el of $$(".up-fee")) el.textContent = "$" + CFG.pay.usd;
   const f = $("#up-form");
   f.addEventListener("click", e => {
@@ -3096,7 +3092,7 @@ function openUpdate(chain, addr) {
   closeResults();
   for (const a of $$(".tab")) { if (a.dataset.tab === "update") a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); }
   window.scrollTo(0, 0);
-  const on = !!SB();
+  const on = upOn();
   $("#up-off").hidden = on; $("#up-form").hidden = !on;
   if (!on) { $("#up-done").hidden = true; return; }
   initUpdateForm();
