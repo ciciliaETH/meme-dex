@@ -7,25 +7,42 @@ const PAY_METHODS = {
   "eth-eth":   { label: "ETH",  net: "Ethereum", chain: "ethereum", asset: "native", decimals: 18 },
   "usdc-eth":  { label: "USDC", net: "Ethereum", chain: "ethereum", asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", decimals: 6, stable: true },
 };
+// free nodes that answer browsers directly, tried in order (Solana has only one that works without a key)
 const PAY_RPC = {
-  solana: "https://solana-rpc.publicnode.com",
-  base: "https://base-rpc.publicnode.com",
-  ethereum: "https://ethereum-rpc.publicnode.com",
+  solana: ["https://solana-rpc.publicnode.com"],
+  base: ["https://base-rpc.publicnode.com", "https://mainnet.base.org", "https://base.drpc.org", "https://1rpc.io/base"],
+  ethereum: ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org", "https://1rpc.io/eth"],
 };
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const payWallet = (wallets, methodId) => {
   const m = PAY_METHODS[methodId];
   return m ? (m.chain === "solana" ? String(wallets?.solana || "").trim() : String(wallets?.evm || "").trim()) : "";
 };
-async function payRpc(url, method, params) {
-  let res;
-  try {
-    res = await fetch(url, { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
-  } catch (e) { e.net = true; throw e; }
-  if (!res.ok) { const e = new Error("RPC HTTP " + res.status); e.net = true; throw e; }
-  const j = await res.json();
-  if (j.error) { const e = new Error(j.error.message || "RPC error"); e.net = true; throw e; }
-  return j.result;
+/* Asks each node in turn, two rounds. A node that's down, busy or still catching up (empty answer)
+   just passes to the next one. A "bad parameter" answer means the hash itself is wrong, so stop there. */
+async function payRpc(urls, method, params) {
+  let lastErr = null, sawNull = false;
+  for (let round = 0; round < 2; round++) {
+    if (round) await new Promise(r => setTimeout(r, 1500));
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { method: "POST", signal: AbortSignal.timeout(15000), headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+        const j = await res.json().catch(() => null);
+        if (j?.error) {
+          if (j.error.code === -32602 || /invalid|wrong ?size|malformed|parse/i.test(j.error.message || "")) { const e = new Error(j.error.message); e.badInput = true; throw e; }
+          lastErr = new Error(j.error.message || "RPC error"); continue;
+        }
+        if (!res.ok || !j) { lastErr = new Error("RPC HTTP " + res.status); continue; }
+        if (j.result == null) { sawNull = true; continue; }
+        return j.result;
+      } catch (e) {
+        if (e.badInput) throw e;
+        lastErr = e;
+      }
+    }
+  }
+  if (sawNull) return null;
+  throw lastErr || new Error("no node answered");
 }
 const payPriceCache = {};
 // live USD price of SOL or ETH, from the deepest pool of the wrapped token
@@ -100,8 +117,9 @@ async function verifyPayment(methodId, txRaw, wallets, usdRequired, minRatio = 0
       const blk = await payRpc(url, "eth_getBlockByNumber", [rc.blockNumber, false]).catch(() => null);
       out.time = blk?.timestamp ? parseInt(blk.timestamp, 16) * 1000 : null;
     }
-  } catch {
-    return { ...out, state: "unknown", reason: "Couldn't reach the network to check this payment. Try again in a moment." };
+  } catch (e) {
+    if (e?.badInput) return { ...out, reason: `That isn't a valid transaction on ${m.net}. Check you copied the whole hash and picked the right network.` };
+    return { ...out, state: "unknown", reason: "The blockchain nodes didn't answer, so the payment couldn't be checked right now. Try again in a moment." };
   }
   if (!(out.amount > 0)) return { ...out, reason: `This transaction doesn't send ${m.label} on ${m.net} to the MemeDex wallet` };
   try { out.usd = m.stable ? out.amount : out.amount * await payUsdPrice(m.label); } catch { out.usd = null; }
