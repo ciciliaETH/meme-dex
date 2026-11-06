@@ -1,0 +1,9 @@
+{
+  "name": "memedex",
+  "private": true,
+  "type": "module",
+  "description": "MemeDex: static site plus two small Vercel functions for per-token share cards",
+  "dependencies": {
+    "@vercel/og": "0.11.1"
+  }
+}

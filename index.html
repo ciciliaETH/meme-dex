@@ -464,6 +464,15 @@ details.crit summary { cursor: pointer; color: var(--muted); font-size: 12px; fo
 .checks .vv { font-size: 12px; color: var(--muted); }
 #sec-card .stats { padding: 14px 0 0; }
 
+/* ---------- share ---------- */
+.share-btn { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; cursor: pointer; font: 800 11px var(--font-body); letter-spacing: .04em; text-transform: uppercase; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line-2); }
+.share-btn svg { width: 13px; height: 13px; }
+.share-btn:hover, .share-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+.share-menu { position: fixed; z-index: 60; min-width: 220px; display: grid; padding: 6px; gap: 2px; box-shadow: 0 18px 50px rgba(0, 0, 0, .55); background: var(--panel); }
+.share-menu a, .share-menu button { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; text-align: left; font: 700 13px var(--font-body); color: var(--fg); text-decoration: none; background: none; border: 0; cursor: pointer; }
+.share-menu a:hover, .share-menu button:hover, .share-menu :focus-visible { background: var(--panel-3); }
+.share-menu small { color: var(--dim); font-weight: 600; }
+
 /* ---------- token info (paid profile) on the token page ---------- */
 .d-banner { width: 100%; aspect-ratio: 3 / 1; max-height: 260px; overflow: hidden; background: var(--panel-3); border: 1px solid var(--line); border-bottom: 0; }
 .d-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -729,6 +738,7 @@ footer { display: none; }
 
       <section id="detail-view" hidden>
         <a class="back" href="#/">← Back to market</a>
+        <div id="share-menu" class="share-menu panel" role="menu" hidden></div>
         <div id="d-banner" class="d-banner" hidden></div>
         <div id="d-head" class="panel d-head"></div>
         <div id="d-alert" hidden></div>
@@ -926,6 +936,7 @@ const CFG = {
     support: "",                   // optional link shown after submitting, e.g. https://t.me/yourchannel
   },
   profilesMs: 300000,  // reload approved token info every 5 minutes
+  siteUrl: "https://meme-dex-six.vercel.app", // used for share links when the page isn't opened from the live site
   // Logos and links from public data only show for big or trending tokens. Smaller and new
   // tokens get a "?" logo and no social links until their team buys token info.
   freeInfo: { trending: true, minMcap: 1000000 },
@@ -2355,7 +2366,7 @@ function gradeChipHTML(r) {
 function paintHead(r) {
   const h24 = r.change?.h24, h1 = r.change?.h1;
   $("#d-head").innerHTML = `
-    <div class="d-id">${starHTML(r)}${logoWrapHTML(r, "lg")}<div style="min-width:0"><h1>${esc(r.base.symbol || "?")}/${esc(r.quote?.symbol || "")}<small>${esc(r.base.name || "")} · ${chainIconHTML(r.chain, "in")}${esc(chainName(r.chain))}${r.dexId ? " · " + esc(r.dexId) : ""}</small></h1><div class="d-badges">${gradeChipHTML(r)}${liveChipHTML()}</div></div></div>
+    <div class="d-id">${starHTML(r)}${logoWrapHTML(r, "lg")}<div style="min-width:0"><h1>${esc(r.base.symbol || "?")}/${esc(r.quote?.symbol || "")}<small>${esc(r.base.name || "")} · ${chainIconHTML(r.chain, "in")}${esc(chainName(r.chain))}${r.dexId ? " · " + esc(r.dexId) : ""}</small></h1><div class="d-badges">${gradeChipHTML(r)}${liveChipHTML()}<button type="button" class="share-btn" data-share aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v8h14v-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></svg>Share</button></div></div></div>
     <div class="d-price"><div class="p">${fmtPrice(r.priceUsd)}</div>${r.priceNative ? `<div class="pn">${fmtPrice(r.priceNative, true)} ${esc(r.quote?.symbol || "")}</div>` : ""}</div>
     <div class="stat"><b class="${pctCls(h24)}">${fmtPct(h24)}</b><span>24h change</span></div>
     <div class="stat"><b class="${pctCls(h1)}">${fmtPct(h1)}</b><span>1h change</span></div>
@@ -2505,6 +2516,7 @@ async function openDetail(chain, pair) {
   state.view = "detail";
   const key = rowKey(chain, pair);
   state.detailKey = key;
+  syncPath(`/t/${enc(chain)}/${enc(pair)}`);
   $("#list-view").hidden = true; $("#update-view").hidden = true; $("#detail-view").hidden = false;
   for (const a of $$('.tab[data-tab="update"]')) a.removeAttribute("aria-current");
   closeResults();
@@ -2544,6 +2556,7 @@ function stopDetailTimers() { while (detailTimers.length) clearInterval(detailTi
 function openList(tab) {
   stopDetailTimers(); destroyChart(); stopOnchain();
   state.view = "list"; state.detailKey = null;
+  syncPath();
   if (tab !== state.tab) { state.tab = tab; state.sort = null; }
   document.title = "MemeDex";
   $("#detail-view").hidden = true; $("#update-view").hidden = true; $("#list-view").hidden = false;
@@ -3140,6 +3153,7 @@ function resetUpForm() {
 function openUpdate(chain, addr) {
   stopDetailTimers(); destroyChart(); stopOnchain();
   state.view = "update"; state.detailKey = null;
+  syncPath();
   document.title = "Update token info · MemeDex";
   $("#list-view").hidden = true; $("#detail-view").hidden = true; $("#update-view").hidden = false;
   closeResults();
@@ -3157,9 +3171,76 @@ function openUpdate(chain, addr) {
   paintUp();
 }
 
+/* ---------- share a token: /t/<chain>/<pair> links get their own preview image ---------- */
+const siteOrigin = () => /^https:$/.test(location.protocol) && !/^(localhost|127\.)/.test(location.hostname) ? location.origin : CFG.siteUrl;
+const shareUrl = r => `${siteOrigin()}/t/${enc(r.chain)}/${enc(r.pairAddress)}`;
+function closeShareMenu() {
+  const m = $("#share-menu"); if (m.hidden) return;
+  m.hidden = true; for (const b of $$("[data-share]")) b.setAttribute("aria-expanded", "false");
+}
+async function shareToken(btn) {
+  const r = rows.get(state.detailKey); if (!r) return;
+  const url = shareUrl(r), sym = r.base.symbol || "this token";
+  const text = `$${sym} on MemeDex: ${fmtPrice(r.priceUsd)} (${fmtPct(r.change?.h24)} 24h)`;
+  // phones: the system share sheet
+  if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+    try { await navigator.share({ title: `${sym} · MemeDex`, text, url }); return; } catch (e) { if (e?.name === "AbortError") return; }
+  }
+  const m = $("#share-menu");
+  if (!m.hidden) { closeShareMenu(); return; }
+  m.innerHTML = `<button type="button" role="menuitem" data-copy-link="${esc(url)}">Copy link <small>${esc(url.replace(/^https:\/\//, "").slice(0, 26))}…</small></button>
+    <a role="menuitem" href="https://x.com/intent/post?text=${enc(text)}&url=${enc(url)}" target="_blank" rel="noopener">Post on X <small>↗</small></a>
+    <a role="menuitem" href="https://t.me/share/url?url=${enc(url)}&text=${enc(text)}" target="_blank" rel="noopener">Share on Telegram <small>↗</small></a>
+    ${navigator.share ? `<button type="button" role="menuitem" data-native-share>More options…</button>` : ""}`;
+  m.hidden = false; btn.setAttribute("aria-expanded", "true");
+  const b = btn.getBoundingClientRect(), w = m.offsetWidth;
+  m.style.left = Math.max(8, Math.min(b.left, innerWidth - w - 8)) + "px";
+  m.style.top = (b.bottom + 6) + "px";
+  m.querySelector("button, a")?.focus();
+}
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-share]");
+  if (btn) { e.preventDefault(); shareToken(btn); return; }
+  const cp = e.target.closest("[data-copy-link]");
+  if (cp) {
+    const text = cp.dataset.copyLink;
+    closeShareMenu();
+    (navigator.clipboard?.writeText(text) || Promise.reject()).catch(() => {
+      const ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+      document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch { /* manual copy */ } ta.remove();
+    }).finally(() => {
+      for (const b of $$("[data-share]")) b.lastChild.textContent = "Link copied";
+      setTimeout(() => { for (const b of $$("[data-share]")) b.lastChild.textContent = "Share"; }, 1600);
+    });
+    return;
+  }
+  if (e.target.closest("[data-native-share]")) {
+    const r = rows.get(state.detailKey); closeShareMenu();
+    if (r) navigator.share({ title: `${r.base.symbol} · MemeDex`, url: shareUrl(r) }).catch(() => {});
+    return;
+  }
+  if (e.target.closest("#share-menu a")) { setTimeout(closeShareMenu, 0); return; }
+  if (!e.target.closest("#share-menu")) closeShareMenu();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeShareMenu(); });
+addEventListener("scroll", closeShareMenu, { passive: true });
+
+// The address bar shows /t/<chain>/<pair> on token pages, so a copied URL also gets the token's preview.
+// The app itself keeps routing on #/… (that's what works when the file is opened locally).
+function syncPath(path) {
+  if (!/^https?:$/.test(location.protocol)) return;
+  const want = path || "/" + location.hash;
+  if (location.pathname + location.hash !== want) history.replaceState(history.state, "", want);
+}
+
 /* router */
+let lastRoute = { h: "", t: 0 };
 function route() {
-  const h = location.hash || "#/";
+  const pm = location.pathname.match(/^\/t\/([^/]+)\/([^/]+)\/?$/);
+  const h = location.hash || (pm ? `#/t/${pm[1]}/${pm[2]}` : "#/");
+  if (h === lastRoute.h && Date.now() - lastRoute.t < 300) return; // a history step can fire both popstate and hashchange
+  lastRoute = { h, t: Date.now() };
+  closeShareMenu();
   const m = h.match(/^#\/t\/([^/]+)\/(.+)$/);
   if (m) { openDetail(decodeURIComponent(m[1]), decodeURIComponent(m[2])); return; }
   const u = h.match(/^#\/update(?:\/([^/]+)\/([^/]+))?\/?$/);
@@ -3167,6 +3248,7 @@ function route() {
   openList(h === "#/trending" ? "trending" : h === "#/new" || h === "#/baru" ? "fresh" : h === "#/watchlist" ? "watch" : "all");
 }
 window.addEventListener("hashchange", route);
+window.addEventListener("popstate", () => { if (!location.hash) route(); });
 document.addEventListener("visibilitychange", () => { if (!document.hidden) liveTick(); });
 
 route();

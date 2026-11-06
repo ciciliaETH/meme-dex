@@ -40,6 +40,17 @@ The anon key is meant to be public. Row Level Security in the database is what s
 
 `src/pay-shared.js` holds the payment check used by both pages. After editing it, run `python3 src/build.py` to copy it into `index.html` and `admin.html`.
 
+## Share cards
+
+Every token has a share link: `/t/<chain>/<pair>`. The address bar shows it on token pages, and the Share button copies it or opens the phone's share sheet. When that link is posted on X, Telegram, WhatsApp or Discord, the preview shows a card made for that token: logo (or "?" if it hasn't bought token info and is under $1M), name, chain, price, 24h change, market cap, liquidity, volume and Coin Grade.
+
+Two small Vercel functions do this:
+
+- `api/share.js` answers `/t/<chain>/<pair>` (see `vercel.json`) with the token's title, description and image tags, then forwards people to the token page.
+- `api/og.js` draws the 1200×630 card with `@vercel/og`, using the fonts in `fonts/`. Cards are cached for 10 minutes.
+
+Both read the same rules as the site from `api/_token.js`; keep the grade bands and the $1M logo rule there in sync with `CFG` in `index.html`.
+
 ## Coin Grade
 
 The grade is based on how much of the supply the token creator's wallet still holds:
