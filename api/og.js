@@ -19,7 +19,7 @@ const loadFonts = origin => (fontsP ||= Promise.all([
 async function imageData(url) {
   if (!url || !/^https:\/\//.test(url)) return null;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(4000), headers: { accept: "image/png,image/jpeg,image/gif;q=0.9" } });
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000), headers: { accept: "image/png,image/jpeg,image/gif;q=0.9" } });
     const type = (res.headers.get("content-type") || "").split(";")[0].trim();
     if (!res.ok || !/^image\/(png|jpeg|gif)$/.test(type)) return null;
     const buf = Buffer.from(await res.arrayBuffer());
@@ -96,10 +96,12 @@ export async function GET(request) {
   const chain = (url.searchParams.get("chain") || "").toLowerCase(), pair = url.searchParams.get("pair") || "";
   const fallback = () => Response.redirect(`${origin}/og.png`, 302);
   if (!validPair(chain, pair)) return fallback();
-  let t, fonts;
-  try { [t, fonts] = await Promise.all([loadToken(chain, pair), loadFonts(origin)]); } catch { return fallback(); }
+  let t, fonts, chainIcon;
+  try {
+    [t, fonts, chainIcon] = await Promise.all([loadToken(chain, pair), loadFonts(origin), imageData(`https://dd.dexscreener.com/ds-data/chains/${chain}.png`)]);
+  } catch { return fallback(); }
   if (!t) return fallback();
-  const [logo, chainIcon] = await Promise.all([imageData(t.logo), imageData(`https://dd.dexscreener.com/ds-data/chains/${chain}.png`)]);
+  const logo = await imageData(t.logo);
   return new ImageResponse(card(t, logo, chainIcon), {
     width: 1200, height: 630, fonts,
     headers: { "cache-control": "public, max-age=600, s-maxage=600, stale-while-revalidate=86400" },

@@ -26,7 +26,7 @@ const gradeFor = p => p == null ? null : GRADE_BANDS.find(([, test]) => test(p))
 const flag = v => v === "1" || v === 1 ? true : v === "0" || v === 0 ? false : null;
 const BURN = /^0x(0{40}|0{36}dead)$/i;
 
-async function getJSON(url, init = {}, ms = 6000) {
+async function getJSON(url, init = {}, ms = 5000) {
   const res = await fetch(url, { ...init, signal: AbortSignal.timeout(ms), headers: { accept: "application/json", ...(init.headers || {}) } });
   if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
   return res.json();
@@ -114,7 +114,8 @@ export async function loadToken(chain, pair) {
   if (!p?.baseToken?.address) return null;
   const addr = p.baseToken.address;
   const timed = (promise, ms) => Promise.race([promise, new Promise(r => setTimeout(() => r(null), ms))]).catch(() => null);
-  const [profile, grade] = await Promise.all([timed(loadProfile(chain, addr), 4000), timed(loadGrade(chain, addr), 7000)]);
+  // the grade is a nice-to-have on the card: give it a few seconds, then draw without it
+  const [profile, grade] = await Promise.all([timed(loadProfile(chain, addr), 3000), timed(loadGrade(chain, addr), 4500)]);
   const mcap = num(p.marketCap) ?? num(p.fdv);
   const free = (mcap ?? 0) >= FREE_INFO_MCAP;
   return {

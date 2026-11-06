@@ -3181,6 +3181,12 @@ function closeShareMenu() {
 async function shareToken(btn) {
   const r = rows.get(state.detailKey); if (!r) return;
   const url = shareUrl(r), sym = r.base.symbol || "this token";
+  // warm the server's cache so the preview card is ready when X/Telegram come to fetch it
+  if (siteOrigin() === location.origin) {
+    const q = `chain=${enc(r.chain)}&pair=${enc(r.pairAddress)}`;
+    fetch(`/api/og?${q}&v=${Math.floor(Date.now() / 600000)}`).catch(() => {});
+    fetch(`/t/${enc(r.chain)}/${enc(r.pairAddress)}`).catch(() => {});
+  }
   const text = `$${sym} on MemeDex: ${fmtPrice(r.priceUsd)} (${fmtPct(r.change?.h24)} 24h)`;
   // phones: the system share sheet
   if (navigator.share && matchMedia("(pointer: coarse)").matches) {
